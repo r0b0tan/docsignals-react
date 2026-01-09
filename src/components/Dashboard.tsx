@@ -48,7 +48,7 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
               </p>
               <div className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
                 <div
-                  className="h-full bg-gray-900 transition-all duration-300"
+                  className="h-full bg-indigo-600 transition-all duration-300"
                   style={{ width: `${state.progress}%` }}
                 />
               </div>

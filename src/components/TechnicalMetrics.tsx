@@ -106,7 +106,7 @@ export function TechnicalMetrics({ structure, semantics, fetchCount }: Technical
               value={semantics.headings.hasSkips ? 'Yes' : 'No'}
             />
             <MetricRow
-              label={<>Content in landmarks {' '}
+              label={<>Top-level content regions {' '}
                 <Tooltip text="Percentage of text content located within semantic landmark elements (header, nav, main, footer, aside, section, article).">
                   <span className="text-indigo-700">ⓘ</span>
                 </Tooltip>
