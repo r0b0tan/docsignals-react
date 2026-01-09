@@ -75,6 +75,14 @@ export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps
               </>}
               value={structure.topLevelSections}
             />
+            <MetricRow
+              label={<>Shadow DOM hosts {' '}
+                <Tooltip text="Custom elements (hyphenated tag names) that may encapsulate content in shadow DOM, making it invisible to standard document traversal.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={structure.customElements}
+            />
           </div>
         </div>
 
@@ -119,6 +127,42 @@ export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps
                 </Tooltip>
               </>}
               value={semantics.linkIssues}
+            />
+            <MetricRow
+              label={<><Code>time</Code> elements {' '}
+                <Tooltip text="Elements using the <time> tag. Those with a datetime attribute provide machine-readable timestamps.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={semantics.timeElements.total === 0
+                ? '0'
+                : `${semantics.timeElements.withDatetime}/${semantics.timeElements.total} with datetime`}
+            />
+            <MetricRow
+              label={<>List structures {' '}
+                <Tooltip text="Count of ordered (ol), unordered (ul), and description (dl) lists in the document.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={semantics.lists.total}
+            />
+            <MetricRow
+              label={<>Tables with headers {' '}
+                <Tooltip text="Tables that include thead or th elements to identify header cells.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={semantics.tables.total === 0
+                ? '0'
+                : `${semantics.tables.withHeaders}/${semantics.tables.total}`}
+            />
+            <MetricRow
+              label={<><Code>lang</Code> attribute {' '}
+                <Tooltip text="Whether the html element declares a language via the lang attribute.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={semantics.langAttribute ? 'Yes' : 'No'}
             />
           </div>
         </div>

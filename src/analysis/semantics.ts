@@ -65,6 +65,36 @@ export function checkSemantics(html: string): SemanticResult {
     }
   }
 
+  // Time elements
+  const timeEls = doc.querySelectorAll('time');
+  const timeTotal = timeEls.length;
+  let timeWithDatetime = 0;
+  for (const el of timeEls) {
+    if (el.hasAttribute('datetime')) {
+      timeWithDatetime++;
+    }
+  }
+
+  // Lists
+  const orderedLists = doc.querySelectorAll('ol').length;
+  const unorderedLists = doc.querySelectorAll('ul').length;
+  const descriptionLists = doc.querySelectorAll('dl').length;
+  const listsTotal = orderedLists + unorderedLists + descriptionLists;
+
+  // Tables
+  const tables = doc.querySelectorAll('table');
+  const tablesTotal = tables.length;
+  let tablesWithHeaders = 0;
+  for (const table of tables) {
+    if (table.querySelector('thead') || table.querySelector('th')) {
+      tablesWithHeaders++;
+    }
+  }
+
+  // Language attribute
+  const htmlEl = doc.documentElement;
+  const langAttribute = htmlEl?.hasAttribute('lang') ?? false;
+
   // Classification
   let score = 0;
   if (h1Count === 1 && !hasSkips) score += 25;
@@ -87,5 +117,9 @@ export function checkSemantics(html: string): SemanticResult {
     landmarks: { found, coveragePercent },
     divRatio,
     linkIssues,
+    timeElements: { total: timeTotal, withDatetime: timeWithDatetime },
+    lists: { total: listsTotal, ordered: orderedLists, unordered: unorderedLists, description: descriptionLists },
+    tables: { total: tablesTotal, withHeaders: tablesWithHeaders },
+    langAttribute,
   };
 }

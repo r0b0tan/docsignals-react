@@ -15,6 +15,7 @@ export interface DomMetrics {
   domNodes: number;
   maxDepth: number;
   topLevelSections: number;
+  customElements: number;
 }
 
 const SKIP_TAGS = new Set(['script', 'style', 'noscript', 'svg', 'path']);
@@ -25,11 +26,12 @@ export function analyzeDomMetrics(html: string): DomMetrics {
   const body = doc.body;
 
   if (!body) {
-    return { domNodes: 0, maxDepth: 0, topLevelSections: 0 };
+    return { domNodes: 0, maxDepth: 0, topLevelSections: 0, customElements: 0 };
   }
 
   let domNodes = 0;
   let maxDepth = 0;
+  let customElements = 0;
 
   function walk(el: Element, depth: number): void {
     const tag = el.tagName.toLowerCase();
@@ -37,6 +39,11 @@ export function analyzeDomMetrics(html: string): DomMetrics {
 
     domNodes++;
     maxDepth = Math.max(maxDepth, depth);
+
+    // Custom elements have a hyphen in their tag name (per spec)
+    if (tag.includes('-')) {
+      customElements++;
+    }
 
     for (const child of el.children) {
       walk(child, depth + 1);
@@ -54,7 +61,7 @@ export function analyzeDomMetrics(html: string): DomMetrics {
     }
   }
 
-  return { domNodes, maxDepth, topLevelSections };
+  return { domNodes, maxDepth, topLevelSections, customElements };
 }
 
 export function compare(trees: NormalizedNode[], domMetrics: DomMetrics): StructureResult {

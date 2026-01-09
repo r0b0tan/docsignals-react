@@ -118,6 +118,15 @@ function generateInterpretations(
     });
   }
 
+  // Shadow DOM hosts (custom elements)
+  if (structure.customElements > 0) {
+    interpretations.push({
+      category: 'Structure',
+      finding: `${structure.customElements} shadow DOM host${structure.customElements === 1 ? '' : 's'}`,
+      implication: 'Content inside shadow DOM boundaries is not visible to standard document traversal methods.',
+    });
+  }
+
   // Element composition
   const divPercent = Math.round(semantics.divRatio * 100);
   if (semantics.divRatio > 0.6) {
@@ -152,6 +161,65 @@ function generateInterpretations(
       category: 'Links',
       finding: 'All links have descriptive text',
       implication: 'Link destinations can be understood without additional context.',
+    });
+  }
+
+  // Time elements
+  if (semantics.timeElements.total > 0) {
+    if (semantics.timeElements.withDatetime === semantics.timeElements.total) {
+      interpretations.push({
+        category: 'Semantics',
+        finding: `${semantics.timeElements.total} time element${semantics.timeElements.total === 1 ? '' : 's'} with datetime`,
+        implication: 'Machine-readable timestamps allow unambiguous date extraction without parsing natural language.',
+      });
+    } else if (semantics.timeElements.withDatetime > 0) {
+      interpretations.push({
+        category: 'Semantics',
+        finding: `${semantics.timeElements.withDatetime}/${semantics.timeElements.total} time elements with datetime`,
+        implication: 'Some timestamps are machine-readable; others require natural language date parsing.',
+      });
+    } else {
+      interpretations.push({
+        category: 'Semantics',
+        finding: `${semantics.timeElements.total} time element${semantics.timeElements.total === 1 ? '' : 's'} without datetime`,
+        implication: 'Time elements lack machine-readable datetime attributes, requiring natural language date parsing.',
+      });
+    }
+  }
+
+  // List structures
+  if (semantics.lists.total > 0) {
+    interpretations.push({
+      category: 'Semantics',
+      finding: `${semantics.lists.total} list structure${semantics.lists.total === 1 ? '' : 's'}`,
+      implication: 'List markup signals enumerable content, allowing machines to identify item boundaries without heuristics.',
+    });
+  }
+
+  // Tables
+  if (semantics.tables.total > 0) {
+    const withoutHeaders = semantics.tables.total - semantics.tables.withHeaders;
+    if (withoutHeaders > 0) {
+      interpretations.push({
+        category: 'Semantics',
+        finding: `${withoutHeaders} table${withoutHeaders === 1 ? '' : 's'} without header markup`,
+        implication: 'Tables without header markup require machines to infer which cells are labels versus data.',
+      });
+    }
+  }
+
+  // Language attribute
+  if (semantics.langAttribute) {
+    interpretations.push({
+      category: 'Semantics',
+      finding: 'Language declared',
+      implication: 'Language declaration allows machines to apply appropriate text processing and tokenization rules.',
+    });
+  } else {
+    interpretations.push({
+      category: 'Semantics',
+      finding: 'No language declared',
+      implication: 'Without a lang attribute, machines must detect the document language through content analysis.',
     });
   }
 

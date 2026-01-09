@@ -9,6 +9,7 @@ export interface StructureResult {
   domNodes: number;
   maxDepth: number;
   topLevelSections: number;
+  customElements: number;
 }
 
 export interface SemanticResult {
@@ -17,6 +18,10 @@ export interface SemanticResult {
   landmarks: { found: string[]; coveragePercent: number };
   divRatio: number;
   linkIssues: number;
+  timeElements: { total: number; withDatetime: number };
+  lists: { total: number; ordered: number; unordered: number; description: number };
+  tables: { total: number; withHeaders: number };
+  langAttribute: boolean;
 }
 
 export interface AnalysisResult {
