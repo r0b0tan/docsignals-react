@@ -29,6 +29,16 @@ DocSignals focuses solely on **document structure and explicitness**.
 
 ---
 
+## Tech Stack
+
+- React 18 (UI framework)
+- TypeScript (static typing)
+- Vite (build and dev tooling)
+- Tailwind CSS (utility-first styling)
+
+---
+
+
 ## Core Concepts
 
 ### 1. Measured Values
