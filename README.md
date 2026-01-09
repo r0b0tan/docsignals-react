@@ -1,13 +1,9 @@
 # DocSignals
 
-This repository contains the React-based frontend for DocSignals.
-It focuses on component architecture, state modeling, and UI design
-for structural document analysis.
+**What is DocSignals?**
 
-Built intentionally to demonstrate modern React patterns
-by an experienced Angular developer transitioning to React.
-
-
+DocSignals is a React-based frontend for analyzing and visualizing
+structural and semantic signals in HTML documents.
 
 **Structural and semantic signals for machine interpretability**
 
