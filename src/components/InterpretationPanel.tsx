@@ -9,16 +9,23 @@ interface Interpretation {
 
 function generateInterpretations(
   structure: StructureResult,
-  semantics: SemanticResult
+  semantics: SemanticResult,
+  fetchCount: number
 ): Interpretation[] {
   const interpretations: Interpretation[] = [];
 
   // Structure consistency
   if (structure.classification === 'deterministic') {
+    const finding = fetchCount === 1 
+      ? 'Single fetch completed'
+      : `Identical across ${fetchCount} fetches`;
+    const implication = fetchCount === 1
+      ? 'Baseline captured; multiple fetches needed to verify consistency across visits.'
+      : 'Machines can expect consistent content representation on each visit.';
     interpretations.push({
       category: 'Structure',
-      finding: 'Identical across 3 fetches',
-      implication: 'Machines can expect consistent content representation on each visit.',
+      finding,
+      implication,
     });
   } else if (structure.classification === 'mostly-deterministic') {
     interpretations.push({
@@ -229,10 +236,11 @@ function generateInterpretations(
 interface InterpretationPanelProps {
   structure: StructureResult;
   semantics: SemanticResult;
+  fetchCount: number;
 }
 
-export function InterpretationPanel({ structure, semantics }: InterpretationPanelProps) {
-  const interpretations = generateInterpretations(structure, semantics);
+export function InterpretationPanel({ structure, semantics, fetchCount }: InterpretationPanelProps) {
+  const interpretations = generateInterpretations(structure, semantics, fetchCount);
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200/60 sm:p-6">

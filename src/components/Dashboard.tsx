@@ -104,6 +104,7 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
               <InterpretationPanel
                 structure={state.result.structure}
                 semantics={state.result.semantics}
+                fetchCount={fetchCount}
               />
             </section>
 
