@@ -1,8 +1,9 @@
 import type { StructureResult, SemanticResult } from '../analysis/types';
 import { Code } from './Code';
+import { Tooltip } from './Tooltip';
 
 interface MetricRowProps {
-  label: string;
+  label: React.ReactNode;
   value: React.ReactNode;
 }
 
@@ -26,7 +27,12 @@ export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200/60 sm:p-6">
       <div className="mb-5">
-        <h3 className="text-sm font-semibold text-gray-900">Measured Values</h3>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Measured Values{' '}
+          <Tooltip text="Raw data points extracted from the page's HTML structure without interpretation.">
+            <span className="text-indigo-700 font-normal">ⓘ</span>
+          </Tooltip>
+        </h3>
         <p className="mt-1 text-xs text-gray-500">Raw observations from document analysis</p>
       </div>
 
@@ -45,6 +51,30 @@ export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps
               label="Structural differences"
               value={structure.differenceCount}
             />
+            <MetricRow
+              label={<>DOM nodes {' '}
+                <Tooltip text="Total number of HTML elements in the document, excluding scripts, styles, and SVG.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={structure.domNodes.toLocaleString()}
+            />
+            <MetricRow
+              label={<>Max DOM depth {' '}
+                <Tooltip text="The deepest level of nesting in the document's element hierarchy.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={structure.maxDepth}
+            />
+            <MetricRow
+              label={<>Top-level sections {' '}
+                <Tooltip text="Number of semantic section elements (header, nav, main, section, article, aside, footer) directly under the body.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
+              value={structure.topLevelSections}
+            />
           </div>
         </div>
 
@@ -59,19 +89,35 @@ export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps
               value={semantics.headings.h1Count}
             />
             <MetricRow
-              label="Heading level gaps"
+              label={<>Heading level gaps {' '}
+                <Tooltip text="Indicates skipped heading levels (e.g. h1 → h3), which can confuse document outline parsers.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
               value={semantics.headings.hasSkips ? 'Yes' : 'No'}
             />
             <MetricRow
-              label="Content in landmarks"
+              label={<>Content in landmarks {' '}
+                <Tooltip text="Percentage of text content located within semantic landmark elements (header, nav, main, footer, aside, section, article).">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
               value={`${semantics.landmarks.coveragePercent}%`}
             />
             <MetricRow
-              label={<>Generic containers (<Code>div</Code>/<Code>span</Code>)</>}
+              label={<>Generic containers (<Code>div</Code>/<Code>span</Code>) {' '}
+                <Tooltip text="Percentage of all HTML elements that are non-semantic containers (div or span) rather than meaningful elements like p, article, or button.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
               value={`${divPercent}%`}
             />
             <MetricRow
-              label="Non-descriptive links"
+              label={<>Non-descriptive links {' '}
+                <Tooltip text="Links with generic text like 'click here', 'read more', or 'learn more' that don't describe the destination.">
+                  <span className="text-indigo-700">ⓘ</span>
+                </Tooltip>
+              </>}
               value={semantics.linkIssues}
             />
           </div>

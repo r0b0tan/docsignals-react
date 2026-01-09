@@ -1,4 +1,5 @@
 import type { StructureResult, SemanticResult } from '../analysis/types';
+import { Tooltip } from './Tooltip';
 
 interface Interpretation {
   category: string;
@@ -132,7 +133,12 @@ export function InterpretationPanel({ structure, semantics }: InterpretationPane
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200/60 sm:p-6">
       <div className="mb-5">
-        <h3 className="text-sm font-semibold text-gray-900">Interpretation</h3>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Interpretation{' '}
+          <Tooltip text="Analysis of what the measured values mean for how machines understand and process this page.">
+            <span className="text-indigo-700 font-normal">ⓘ</span>
+          </Tooltip>
+        </h3>
         <p className="mt-1 text-xs text-gray-500">What these measurements suggest for machine readers</p>
       </div>
 

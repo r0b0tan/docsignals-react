@@ -6,7 +6,7 @@ interface TooltipProps {
 export function Tooltip({ children, text }: TooltipProps) {
   return (
     <span className="group relative inline-block">
-      <span className="cursor-help border-b border-dotted border-gray-400">
+      <span className="cursor-help">
         {children}
       </span>
       <span

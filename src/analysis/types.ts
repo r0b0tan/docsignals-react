@@ -6,6 +6,9 @@ export interface NormalizedNode {
 export interface StructureResult {
   classification: 'deterministic' | 'mostly-deterministic' | 'unstable';
   differenceCount: number;
+  domNodes: number;
+  maxDepth: number;
+  topLevelSections: number;
 }
 
 export interface SemanticResult {

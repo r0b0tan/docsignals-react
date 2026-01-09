@@ -11,7 +11,53 @@ function treesEqual(a: NormalizedNode, b: NormalizedNode): boolean {
   return true;
 }
 
-export function compare(trees: NormalizedNode[]): StructureResult {
+export interface DomMetrics {
+  domNodes: number;
+  maxDepth: number;
+  topLevelSections: number;
+}
+
+const SKIP_TAGS = new Set(['script', 'style', 'noscript', 'svg', 'path']);
+const SECTION_TAGS = new Set(['header', 'nav', 'main', 'section', 'article', 'aside', 'footer']);
+
+export function analyzeDomMetrics(html: string): DomMetrics {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const body = doc.body;
+
+  if (!body) {
+    return { domNodes: 0, maxDepth: 0, topLevelSections: 0 };
+  }
+
+  let domNodes = 0;
+  let maxDepth = 0;
+
+  function walk(el: Element, depth: number): void {
+    const tag = el.tagName.toLowerCase();
+    if (SKIP_TAGS.has(tag)) return;
+
+    domNodes++;
+    maxDepth = Math.max(maxDepth, depth);
+
+    for (const child of el.children) {
+      walk(child, depth + 1);
+    }
+  }
+
+  walk(body, 1);
+
+  // Count top-level sections (direct children of body that are semantic sections)
+  let topLevelSections = 0;
+  for (const child of body.children) {
+    const tag = child.tagName.toLowerCase();
+    if (SECTION_TAGS.has(tag)) {
+      topLevelSections++;
+    }
+  }
+
+  return { domNodes, maxDepth, topLevelSections };
+}
+
+export function compare(trees: NormalizedNode[], domMetrics: DomMetrics): StructureResult {
   let differences = 0;
 
   for (let i = 0; i < trees.length; i++) {
@@ -31,5 +77,9 @@ export function compare(trees: NormalizedNode[]): StructureResult {
     classification = 'unstable';
   }
 
-  return { classification, differenceCount: differences };
+  return {
+    classification,
+    differenceCount: differences,
+    ...domMetrics,
+  };
 }

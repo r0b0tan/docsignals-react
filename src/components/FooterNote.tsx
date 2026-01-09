@@ -5,16 +5,24 @@ export function FooterNote() {
         DevSignals evaluates document structure, not content quality or ranking.
       </p>
       <p className="text-xs text-gray-500">
-        Made by{" "}
+        Built by{" "}
+        <a
+          href="https://www.christophbauer.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          Christoph Bauer
+        </a>{" "}
+        · Follow me on{" "}
         <a
           href="https://github.com/r0b0tan"
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-400 hover:text-blue-300 transition-colors"
         >
-          Christoph Bauer
+          GitHub
         </a>
-        {" "}· Follow me on GitHub
       </p>
     </footer>
   );

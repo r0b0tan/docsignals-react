@@ -78,7 +78,7 @@ export function HeaderBar({
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {/* Brand block: name and claim inline */}
           <div className="flex items-baseline gap-2">
-            <h1 className="text-lg font-semibold tracking-tight text-gray-900">
+            <h1 className="text-lg font-semibold tracking-tight text-indigo-600">
               DevSignals
             </h1>
             <span>|</span>
@@ -108,7 +108,7 @@ export function HeaderBar({
                 <button
                   type="submit"
                   disabled={isRunning || !url}
-                  className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  className="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
                   {isRunning ? 'Analyzing...' : 'Analyze'}
                 </button>
