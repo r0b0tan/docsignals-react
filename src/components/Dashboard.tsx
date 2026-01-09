@@ -1,9 +1,7 @@
 import type { AnalysisResult } from '../analysis/types';
 import { HeaderBar } from './HeaderBar';
-import { SignalSummary } from './SignalSummary';
-import { SignalPanels } from './SignalPanels';
-import { Recommendations } from './Recommendations';
-import { ExplanationPanel } from './ExplanationPanel';
+import { TechnicalMetrics } from './TechnicalMetrics';
+import { InterpretationPanel } from './InterpretationPanel';
 import { ExportButton } from './ExportButton';
 import { ComparisonButton } from './ComparisonView';
 import { FooterNote } from './FooterNote';
@@ -68,7 +66,7 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
         )}
 
         {state.status === 'done' && (
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-8 sm:space-y-10">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-gray-900">Analysis Results</h2>
               <div className="flex items-center gap-2">
@@ -77,25 +75,21 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
               </div>
             </div>
 
-            <SignalSummary
-              structure={state.result.structure}
-              semantics={state.result.semantics}
-            />
+            {/* Technical Metrics Section */}
+            <section>
+              <TechnicalMetrics
+                structure={state.result.structure}
+                semantics={state.result.semantics}
+              />
+            </section>
 
-            <Recommendations
-              structure={state.result.structure}
-              semantics={state.result.semantics}
-            />
-
-            <SignalPanels
-              structure={state.result.structure}
-              semantics={state.result.semantics}
-            />
-
-            <ExplanationPanel
-              structure={state.result.structure}
-              semantics={state.result.semantics}
-            />
+            {/* Interpretation Section */}
+            <section>
+              <InterpretationPanel
+                structure={state.result.structure}
+                semantics={state.result.semantics}
+              />
+            </section>
 
             <FooterNote />
           </div>
