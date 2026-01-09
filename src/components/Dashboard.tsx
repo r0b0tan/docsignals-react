@@ -19,9 +19,11 @@ interface DashboardProps {
   onSubmit: () => void;
   analysisCount: number;
   onCompare: () => void;
+  fetchCount: number;
+  onFetchCountChange: (count: number) => void;
 }
 
-export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, onCompare }: DashboardProps) {
+export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, onCompare, fetchCount, onFetchCountChange }: DashboardProps) {
   return (
     <div className="min-h-screen bg-white">
       <HeaderBar
@@ -69,9 +71,22 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
           <div className="space-y-8 sm:space-y-10">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-gray-900">Analysis Results</h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="fetch-count" className="text-sm text-gray-600">Fetches:</label>
+                  <select
+                    id="fetch-count"
+                    value={fetchCount}
+                    onChange={(e) => onFetchCountChange(Number(e.target.value))}
+                    className="rounded-lg bg-white px-2 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                    <option value={5}>5</option>
+                  </select>
+                </div>
                 <ComparisonButton onCompare={onCompare} analysisCount={analysisCount} />
-                <ExportButton result={state.result} url={url} />
               </div>
             </div>
 
@@ -80,6 +95,7 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
               <TechnicalMetrics
                 structure={state.result.structure}
                 semantics={state.result.semantics}
+                fetchCount={fetchCount}
               />
             </section>
 
@@ -90,6 +106,11 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, analysisCount, on
                 semantics={state.result.semantics}
               />
             </section>
+
+            {/* Export Section */}
+            <div className="flex justify-end">
+              <ExportButton result={state.result} url={url} />
+            </div>
 
             <FooterNote />
           </div>

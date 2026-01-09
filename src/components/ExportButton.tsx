@@ -27,6 +27,10 @@ function generateCSV(result: AnalysisResult, url: string): string {
     ['STRUCTURE', ''],
     ['Classification', result.structure.classification],
     ['Difference Count', result.structure.differenceCount.toString()],
+    ['DOM Nodes', result.structure.domNodes.toString()],
+    ['Max DOM Depth', result.structure.maxDepth.toString()],
+    ['Top-level Sections', result.structure.topLevelSections.toString()],
+    ['Shadow DOM Hosts', result.structure.customElements.toString()],
     ['', ''],
     ['SEMANTICS', ''],
     ['Classification', result.semantics.classification],
@@ -35,9 +39,16 @@ function generateCSV(result: AnalysisResult, url: string): string {
     ['Landmark Coverage %', result.semantics.landmarks.coveragePercent.toString()],
     ['Div/Span Ratio', (result.semantics.divRatio * 100).toFixed(1) + '%'],
     ['Link Issues', result.semantics.linkIssues.toString()],
+    ['Time Elements (total)', result.semantics.timeElements.total.toString()],
+    ['Time Elements (with datetime)', result.semantics.timeElements.withDatetime.toString()],
+    ['List Structures', result.semantics.lists.total.toString()],
+    ['Tables (total)', result.semantics.tables.total.toString()],
+    ['Tables (with headers)', result.semantics.tables.withHeaders.toString()],
+    ['Lang Attribute', result.semantics.langAttribute ? 'Yes' : 'No'],
   ];
 
-  return rows.map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
+  // Use semicolon as delimiter for better Excel compatibility (especially in European locales)
+  return rows.map((row) => row.map((cell) => `"${cell}"`).join(';')).join('\n');
 }
 
 function downloadFile(content: string, filename: string, mimeType: string) {

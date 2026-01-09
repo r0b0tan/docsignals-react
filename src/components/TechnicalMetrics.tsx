@@ -19,9 +19,10 @@ function MetricRow({ label, value }: MetricRowProps) {
 interface TechnicalMetricsProps {
   structure: StructureResult;
   semantics: SemanticResult;
+  fetchCount: number;
 }
 
-export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps) {
+export function TechnicalMetrics({ structure, semantics, fetchCount }: TechnicalMetricsProps) {
   const divPercent = Math.round(semantics.divRatio * 100);
 
   return (
@@ -45,7 +46,7 @@ export function TechnicalMetrics({ structure, semantics }: TechnicalMetricsProps
           <div className="divide-y divide-gray-100">
             <MetricRow
               label="Fetches performed"
-              value="3"
+              value={fetchCount}
             />
             <MetricRow
               label="Structural differences"

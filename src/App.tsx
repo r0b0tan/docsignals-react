@@ -18,6 +18,7 @@ export function App() {
   const [state, setState] = useState<State>({ status: 'idle' });
   const [showComparison, setShowComparison] = useState(false);
   const [analysisHistory, setAnalysisHistory] = useState(getAnalysisHistory());
+  const [fetchCount, setFetchCount] = useState(3);
 
   async function run() {
     const validation = validateUrl(url);
@@ -31,11 +32,11 @@ export function App() {
     try {
       const samples: string[] = [];
 
-      for (let i = 0; i < 3; i++) {
-        setState({ 
-          status: 'running', 
-          progress: (i / 3) * 100, 
-          currentStep: `Fetching sample ${i + 1} of 3...` 
+      for (let i = 0; i < fetchCount; i++) {
+        setState({
+          status: 'running',
+          progress: (i / fetchCount) * 100,
+          currentStep: `Fetching sample ${i + 1} of ${fetchCount}...`
         });
         if (i > 0) await delay(300);
         samples.push(await fetchHtml(validation.url));
@@ -68,6 +69,8 @@ export function App() {
         onSubmit={run}
         analysisCount={analysisHistory.length}
         onCompare={() => setShowComparison(true)}
+        fetchCount={fetchCount}
+        onFetchCountChange={setFetchCount}
       />
       {showComparison && (
         <ComparisonView
