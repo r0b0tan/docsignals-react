@@ -6,12 +6,13 @@ import { InterpretationPanel } from './InterpretationPanel';
 import { ExportButton } from './ExportButton';
 import { FooterNote } from './FooterNote';
 import { getAnalysisHistory, clearAnalysisHistory } from './ComparisonView';
+import { Tooltip } from './Tooltip';
 
 type DashboardState =
   | { status: 'idle' }
   | { status: 'running'; progress: number; currentStep: string }
   | { status: 'error'; message: string }
-  | { status: 'done'; result: AnalysisResult };
+  | { status: 'done'; result: AnalysisResult; analyzedUrl?: string };
 
 type ViewMode = 'analysis' | 'compare';
 
@@ -22,6 +23,7 @@ interface DashboardProps {
   onSubmit: () => void;
   fetchCount: number;
   onFetchCountChange: (count: number) => void;
+  onLoadFromHistory?: (index: number) => void;
 }
 
 // =============================================================================
@@ -42,22 +44,6 @@ interface MetricDefinition {
   group: 'structure' | 'semantics' | 'quality';
   getValue: (entry: AnalysisEntry) => MetricValue;
   render?: (value: MetricValue, allValues: MetricValue[]) => React.ReactNode;
-}
-
-const tokens = {
-  label3: {
-    text: 'text-white',
-    border: 'border-transparent',
-    bg: 'bg-indigo-600',
-  },
-} as const;
-
-function SignalBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium ${tokens.label3.text} ${tokens.label3.bg}`}>
-      {children}
-    </span>
-  );
 }
 
 function ProgressBar({ value, max = 100 }: { value: number; max?: number }) {
@@ -104,21 +90,57 @@ function H1Display({ count }: { count: number }) {
 }
 
 function SignalLabel({ struct, sem }: { struct: string; sem: string }) {
-  const structLabel = struct === 'deterministic' ? 'Static' : struct === 'mostly-deterministic' ? 'Partial' : 'Unstable';
-  const semLabel = sem === 'explicit' ? 'Rich' : sem === 'partial' ? 'Partial' : 'Opaque';
+  const semLabel = sem === 'explicit' ? 'Explicit' : sem === 'partial' ? 'Partial' : 'Opaque';
+
+  const structTooltip = struct === 'deterministic' 
+    ? 'Structure: DOM is identical across requests' 
+    : struct === 'mostly-deterministic' 
+    ? 'Structure: Minor variations between requests'
+    : 'Structure: Changes significantly between requests';
+  
+  const semTooltip = sem === 'explicit'
+    ? 'Semantics: Meaning is encoded in HTML elements'
+    : sem === 'partial'
+    ? 'Semantics: Some semantic structure, with gaps'
+    : 'Semantics: Meaning relies on visual presentation';
+
+  const tooltipText = `${structTooltip}\n${semTooltip}`;
 
   const isBad = struct === 'unstable' || sem === 'opaque';
   const isGood = struct === 'deterministic' && sem === 'explicit';
 
+  const infoIcon = (
+    <Tooltip text={tooltipText}>
+      <span className="text-indigo-600 ml-1.5 cursor-help">ⓘ</span>
+    </Tooltip>
+  );
+
+  const baseClasses = 'text-xs font-medium rounded px-1.5 py-0.5 border';
+
   if (isBad) {
-    return <SignalBadge>{structLabel} / {semLabel}</SignalBadge>;
+    return (
+      <span className="inline-flex items-center">
+        <span className={`${baseClasses} text-indigo-600 border-indigo-300 bg-white`}>{semLabel}</span>
+        {infoIcon}
+      </span>
+    );
   }
 
   if (isGood) {
-    return <span className="text-sm text-slate-400">{structLabel} / {semLabel}</span>;
+    return (
+      <span className="inline-flex items-center">
+        <span className={`${baseClasses} text-slate-400 border-slate-200 bg-white`}>{semLabel}</span>
+        {infoIcon}
+      </span>
+    );
   }
 
-  return <span className="text-sm text-slate-600">{structLabel} / {semLabel}</span>;
+  return (
+    <span className="inline-flex items-center">
+      <span className={`${baseClasses} text-slate-600 border-slate-300 bg-white`}>{semLabel}</span>
+      {infoIcon}
+    </span>
+  );
 }
 
 function IssueDisplay({ count, allCounts }: { count: number; allCounts: number[] }) {
@@ -495,8 +517,10 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
 // MAIN DASHBOARD COMPONENT
 // =============================================================================
 
-export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFetchCountChange }: DashboardProps) {
+export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFetchCountChange, onLoadFromHistory }: DashboardProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('analysis');
+  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+  const [showFetchDropdown, setShowFetchDropdown] = useState(false);
   const analysisHistory = getAnalysisHistory();
   const hasHistory = analysisHistory.length >= 2;
 
@@ -550,22 +574,115 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFet
         {state.status === 'done' && viewMode === 'analysis' && (
           <div className="space-y-8 sm:space-y-10">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-gray-900">Analysis Results</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Analysis Results
+                {state.analyzedUrl && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    {(() => {
+                      try {
+                        return new URL(state.analyzedUrl).hostname;
+                      } catch {
+                        return state.analyzedUrl;
+                      }
+                    })()}
+                  </span>
+                )}
+              </h2>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <label htmlFor="fetch-count" className="text-sm text-gray-600">Fetches:</label>
-                  <select
-                    id="fetch-count"
-                    value={fetchCount}
-                    onChange={(e) => onFetchCountChange(Number(e.target.value))}
-                    className="rounded-lg bg-white px-2 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                {/* Fetches Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFetchDropdown(!showFetchDropdown)}
+                    onBlur={() => setTimeout(() => setShowFetchDropdown(false), 200)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
                   >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={5}>5</option>
-                  </select>
+                    <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {fetchCount} {fetchCount === 1 ? 'Fetch' : 'Fetches'}
+                    <svg className={`h-4 w-4 text-gray-400 transition-transform ${showFetchDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showFetchDropdown && (
+                    <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+                      <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Sample count</p>
+                      {[1, 2, 3, 5].map((count) => (
+                        <button
+                          key={count}
+                          onClick={() => {
+                            onFetchCountChange(count);
+                            setShowFetchDropdown(false);
+                          }}
+                          className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${fetchCount === count ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-gray-700'}`}
+                        >
+                          {count} {count === 1 ? 'Fetch' : 'Fetches'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+                {/* History Dropdown */}
+                {analysisHistory.length > 0 && onLoadFromHistory && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+                      onBlur={() => setTimeout(() => setShowHistoryDropdown(false), 200)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      History
+                      <svg className={`h-4 w-4 text-gray-400 transition-transform ${showHistoryDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {showHistoryDropdown && (
+                      <div className="absolute right-0 top-full z-20 mt-1 w-72 max-h-64 overflow-y-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+                        <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Recent analyses</p>
+                        {analysisHistory.map((entry, index) => {
+                          const hostname = (() => {
+                            try {
+                              return new URL(entry.url).hostname;
+                            } catch {
+                              return entry.url;
+                            }
+                          })();
+                          const timeAgo = (() => {
+                            const diff = Date.now() - new Date(entry.timestamp).getTime();
+                            const minutes = Math.floor(diff / 60000);
+                            if (minutes < 1) return 'just now';
+                            if (minutes < 60) return `${minutes}m ago`;
+                            const hours = Math.floor(minutes / 60);
+                            if (hours < 24) return `${hours}h ago`;
+                            const days = Math.floor(hours / 24);
+                            return `${days}d ago`;
+                          })();
+                          const isActive = state.analyzedUrl === entry.url;
+                          return (
+                            <button
+                              key={`${entry.url}-${entry.timestamp}`}
+                              onClick={() => {
+                                onLoadFromHistory(index);
+                                setShowHistoryDropdown(false);
+                              }}
+                              className={`block w-full px-3 py-2 text-left hover:bg-gray-50 ${isActive ? 'bg-indigo-50' : ''}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-sm truncate ${isActive ? 'font-medium text-indigo-700' : 'text-gray-700'}`}>
+                                  {hostname}
+                                </span>
+                                <span className="ml-2 text-xs text-gray-400 flex-shrink-0">{timeAgo}</span>
+                              </div>
+                              <p className="mt-0.5 text-xs text-gray-400 truncate">{entry.url}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {hasHistory && (
                   <button
                     onClick={handleCompare}

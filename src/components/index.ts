@@ -7,3 +7,4 @@ export { ComparisonView, ComparisonButton, saveAnalysis, getAnalysisHistory } fr
 export { HomePage } from './HomePage';
 export { FooterNote } from './FooterNote';
 export { Code } from './Code';
+export { HelpPage } from './HelpPage';
