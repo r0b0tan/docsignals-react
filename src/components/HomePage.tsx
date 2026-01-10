@@ -128,44 +128,17 @@ export function HomePage() {
     }
   };
 
-  // DEBUG: Test function to simulate fetch warnings
-  const testWarnings = () => {
-    setFetchWarnings([
-      'Sample 1: CORS policy blocked this request or network error occurred.',
-      'Sample 2: CORS policy blocked this request or network error occurred.',
-    ]);
-  };
-
-  // DEBUG: Test function to simulate complete failure
-  const testError = () => {
-    setState({
-      status: 'error',
-      message: 'Could not fetch the URL.\n\nSample 1: CORS policy blocked this request or network error occurred.\nSample 2: CORS policy blocked this request or network error occurred.\nSample 3: CORS policy blocked this request or network error occurred.\n\nThis site blocks cross-origin requests from browsers. Try analyzing a different URL or use a server-side tool.',
-    });
-  };
-
   return (
-    <>
-      {/* DEBUG: Remove these buttons after testing */}
-      <div className="fixed bottom-4 right-4 flex gap-2 z-50">
-        <button onClick={testWarnings} className="bg-amber-500 text-white px-3 py-1 rounded text-sm">
-          Test Warnings
-        </button>
-        <button onClick={testError} className="bg-red-500 text-white px-3 py-1 rounded text-sm">
-          Test Error
-        </button>
-      </div>
-      <Dashboard
-        state={state}
-        url={url}
-        onUrlChange={setUrl}
-        onSubmit={run}
-        fetchCount={fetchCount}
-        onFetchCountChange={setFetchCount}
-        onLoadFromHistory={loadFromHistory}
-        fetchWarnings={fetchWarnings}
-        onDismissWarnings={() => setFetchWarnings([])}
-      />
-    </>
+    <Dashboard
+      state={state}
+      url={url}
+      onUrlChange={setUrl}
+      onSubmit={run}
+      fetchCount={fetchCount}
+      onFetchCountChange={setFetchCount}
+      onLoadFromHistory={loadFromHistory}
+      fetchWarnings={fetchWarnings}
+      onDismissWarnings={() => setFetchWarnings([])}
+    />
   );
 }
