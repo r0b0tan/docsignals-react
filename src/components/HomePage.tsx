@@ -18,6 +18,7 @@ export function HomePage() {
   const [url, setUrl] = useState('');
   const [state, setState] = useState<State>({ status: 'idle' });
   const [fetchCount, setFetchCount] = useState(3);
+  const [fetchWarnings, setFetchWarnings] = useState<string[]>([]);
 
   // Load last analysis result on mount
   useEffect(() => {
@@ -39,7 +40,9 @@ export function HomePage() {
     }
   }
 
-  async function run() {
+  const run = async () => {
+    setFetchWarnings([]); // Clear previous warnings
+
     const validation = validateUrl(url);
     if (!validation.ok) {
       setState({ status: 'error', message: validation.error });
@@ -50,6 +53,7 @@ export function HomePage() {
 
     try {
       const samples: string[] = [];
+      const warnings: string[] = [];
 
       for (let i = 0; i < fetchCount; i++) {
         setState({
@@ -58,7 +62,54 @@ export function HomePage() {
           currentStep: `Fetching sample ${i + 1} of ${fetchCount}...`
         });
         if (i > 0) await delay(300);
-        samples.push(await fetchHtml(validation.url));
+        
+        const result = await fetchHtml(validation.url);
+        if (result.error) {
+          warnings.push(`Sample ${i + 1}: ${result.error}`);
+        } else if (result.html) {
+          samples.push(result.html);
+        }
+      }
+
+      // If all fetches failed, show error with details
+      if (samples.length === 0) {
+        const errorDetails = warnings.length > 0 
+          ? warnings.map(w => w.replace(/^Sample \d+: /, '')).filter((v, i, a) => a.indexOf(v) === i).join('\n')
+          : 'Unknown error';
+        
+        // Determine the type of error for the hint
+        const isNetworkError = warnings.some(w => 
+          w.toLowerCase().includes('unable to connect') || 
+          w.toLowerCase().includes('network')
+        );
+        const isNotFound = warnings.some(w => w.toLowerCase().includes('not found') || w.includes('404'));
+        const isForbidden = warnings.some(w => w.toLowerCase().includes('forbidden') || w.includes('403'));
+        const isTimeout = warnings.some(w => w.toLowerCase().includes('timeout'));
+        const isServerError = warnings.some(w => w.includes('500') || w.includes('502') || w.includes('503'));
+        
+        let hint = '';
+        if (isNotFound) {
+          hint = '\n\nPlease check that the URL is correct and the page exists.';
+        } else if (isForbidden) {
+          hint = '\n\nThis page may require authentication or is not publicly accessible.';
+        } else if (isTimeout) {
+          hint = '\n\nThe server is slow or unresponsive. Try again later.';
+        } else if (isServerError) {
+          hint = '\n\nThe website is experiencing issues. Try again later.';
+        } else if (isNetworkError) {
+          hint = '\n\nCheck your internet connection or try a different URL.';
+        }
+        
+        setState({
+          status: 'error',
+          message: `Could not fetch the URL.\n\n${errorDetails}${hint}`,
+        });
+        return;
+      }
+
+      // If some fetches failed, store warnings but continue
+      if (warnings.length > 0) {
+        setFetchWarnings(warnings);
       }
 
       setState({ status: 'running', progress: 100, currentStep: 'Analyzing structure and semantics...' });
@@ -75,17 +126,46 @@ export function HomePage() {
         message: e instanceof Error ? e.message : 'Fetch failed',
       });
     }
-  }
+  };
+
+  // DEBUG: Test function to simulate fetch warnings
+  const testWarnings = () => {
+    setFetchWarnings([
+      'Sample 1: CORS policy blocked this request or network error occurred.',
+      'Sample 2: CORS policy blocked this request or network error occurred.',
+    ]);
+  };
+
+  // DEBUG: Test function to simulate complete failure
+  const testError = () => {
+    setState({
+      status: 'error',
+      message: 'Could not fetch the URL.\n\nSample 1: CORS policy blocked this request or network error occurred.\nSample 2: CORS policy blocked this request or network error occurred.\nSample 3: CORS policy blocked this request or network error occurred.\n\nThis site blocks cross-origin requests from browsers. Try analyzing a different URL or use a server-side tool.',
+    });
+  };
 
   return (
-    <Dashboard
-      state={state}
-      url={url}
-      onUrlChange={setUrl}
-      onSubmit={run}
-      fetchCount={fetchCount}
-      onFetchCountChange={setFetchCount}
-      onLoadFromHistory={loadFromHistory}
-    />
+    <>
+      {/* DEBUG: Remove these buttons after testing */}
+      <div className="fixed bottom-4 right-4 flex gap-2 z-50">
+        <button onClick={testWarnings} className="bg-amber-500 text-white px-3 py-1 rounded text-sm">
+          Test Warnings
+        </button>
+        <button onClick={testError} className="bg-red-500 text-white px-3 py-1 rounded text-sm">
+          Test Error
+        </button>
+      </div>
+      <Dashboard
+        state={state}
+        url={url}
+        onUrlChange={setUrl}
+        onSubmit={run}
+        fetchCount={fetchCount}
+        onFetchCountChange={setFetchCount}
+        onLoadFromHistory={loadFromHistory}
+        fetchWarnings={fetchWarnings}
+        onDismissWarnings={() => setFetchWarnings([])}
+      />
+    </>
   );
 }

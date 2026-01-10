@@ -25,6 +25,8 @@ interface DashboardProps {
   fetchCount: number;
   onFetchCountChange: (count: number) => void;
   onLoadFromHistory?: (index: number) => void;
+  fetchWarnings?: string[];
+  onDismissWarnings?: () => void;
 }
 
 // =============================================================================
@@ -525,7 +527,17 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
 // MAIN DASHBOARD COMPONENT
 // =============================================================================
 
-export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFetchCountChange, onLoadFromHistory }: DashboardProps) {
+export function Dashboard({
+  state,
+  url,
+  onUrlChange,
+  onSubmit,
+  fetchCount,
+  onFetchCountChange,
+  onLoadFromHistory,
+  fetchWarnings = [],
+  onDismissWarnings,
+}: DashboardProps) {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('analysis');
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
@@ -547,198 +559,250 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFet
       />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
-        {state.status === 'error' && (
-          <div className="mb-8 rounded-xl bg-red-50/80 px-5 py-4 ring-1 ring-red-200/60">
-            <p className="text-sm text-red-700">{state.message}</p>
-          </div>
-        )}
-
-        {state.status === 'running' && (
-          <div className="rounded-xl bg-white px-6 py-8 shadow-sm ring-1 ring-gray-200/60">
-            <div className="mx-auto max-w-md">
-              <p className="mb-3 text-center text-sm font-medium text-gray-700">
-                {state.currentStep}
-              </p>
-              <div className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
-                <div
-                  className="h-full bg-indigo-600 transition-all duration-300"
-                  style={{ width: `${state.progress}%` }}
-                />
-              </div>
-              <p className="text-center text-xs text-gray-500">
-                {Math.round(state.progress)}%
-              </p>
-            </div>
-          </div>
-        )}
-
-        {state.status === 'idle' && (
-          <div className="py-20 text-center">
-            <p className="text-sm text-gray-400">
-              Enter a URL above to analyze its structural signals.
-            </p>
-          </div>
-        )}
-
-        {state.status === 'done' && viewMode === 'analysis' && (
-          <div className="space-y-8 sm:space-y-10">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Analysis Results
-                {state.analyzedUrl && (
-                  <span className="ml-2 text-sm font-normal text-gray-500">
+        <div className="space-y-8 sm:space-y-10">
+          {/* Fetch warnings banner */}
+          {fetchWarnings.length > 0 && (
+            <div className="rounded-xl bg-indigo-50 p-4 ring-1 ring-indigo-200/60">
+              <div className="flex items-start gap-3">
+                <svg className="h-5 w-5 flex-shrink-0 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-indigo-800">
+                    Not all samples could be fetched
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {fetchWarnings.filter(w => !w.startsWith('Hint:')).map((warning, idx) => (
+                      <li key={idx} className="text-xs text-indigo-700">
+                        {warning}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs text-indigo-600">
                     {(() => {
-                      try {
-                        return new URL(state.analyzedUrl).hostname;
-                      } catch {
-                        return state.analyzedUrl;
+                      const warningsLower = fetchWarnings.join(' ').toLowerCase();
+                      if (warningsLower.includes('timeout')) {
+                        return 'Some requests timed out. The server may be slow. Consistency detection may be less accurate.';
                       }
+                      if (warningsLower.includes('cors') || warningsLower.includes('unable to connect')) {
+                        return 'Some requests were blocked or failed to connect. Structural consistency detection may be less accurate with fewer samples.';
+                      }
+                      if (warningsLower.includes('rate') || warningsLower.includes('429')) {
+                        return 'Rate limited by the server. Fewer samples were collected. Try again later for more accurate consistency detection.';
+                      }
+                      return 'Analysis continued with fewer samples. Results may be less accurate for consistency detection.';
                     })()}
-                  </span>
-                )}
-              </h2>
-              <div className="flex items-center gap-3">
-                {/* Fetches Dropdown */}
-                <div className="relative">
+                  </p>
+                </div>
+                {onDismissWarnings && (
                   <button
-                    onClick={() => setShowFetchDropdown(!showFetchDropdown)}
-                    onBlur={() => setTimeout(() => setShowFetchDropdown(false), 200)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                    onClick={onDismissWarnings}
+                    className="text-indigo-400 hover:text-indigo-600 transition-colors"
+                    aria-label="Dismiss warnings"
                   >
-                    <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    {fetchCount} {fetchCount === 1 ? 'Fetch' : 'Fetches'}
-                    <svg className={`h-4 w-4 text-gray-400 transition-transform ${showFetchDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                  {showFetchDropdown && (
-                    <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
-                      <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Sample count</p>
-                      {[1, 2, 3, 5].map((count) => (
-                        <button
-                          key={count}
-                          onClick={() => {
-                            onFetchCountChange(count);
-                            setShowFetchDropdown(false);
-                          }}
-                          className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${fetchCount === count ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-gray-700'}`}
-                        >
-                          {count} {count === 1 ? 'Fetch' : 'Fetches'}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                )}
+              </div>
+            </div>
+          )}
+
+          {state.status === 'error' && (
+            <div className="mb-8 rounded-xl bg-indigo-50/80 px-5 py-4 ring-1 ring-indigo-200/60">
+              <p className="text-sm font-medium text-indigo-800 mb-2">Analysis Failed</p>
+              <p className="text-sm text-indigo-700 whitespace-pre-line">{state.message}</p>
+            </div>
+          )}
+
+          {state.status === 'running' && (
+            <div className="rounded-xl bg-white px-6 py-8 shadow-sm ring-1 ring-gray-200/60">
+              <div className="mx-auto max-w-md">
+                <p className="mb-3 text-center text-sm font-medium text-gray-700">
+                  {state.currentStep}
+                </p>
+                <div className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full bg-indigo-600 transition-all duration-300"
+                    style={{ width: `${state.progress}%` }}
+                  />
                 </div>
-                {/* History Dropdown */}
-                {analysisHistory.length > 0 && onLoadFromHistory && (
+                <p className="text-center text-xs text-gray-500">
+                  {Math.round(state.progress)}%
+                </p>
+              </div>
+            </div>
+          )}
+
+          {state.status === 'idle' && (
+            <div className="py-20 text-center">
+              <p className="text-sm text-gray-400">
+                Enter a URL above to analyze its structural signals.
+              </p>
+            </div>
+          )}
+
+          {state.status === 'done' && viewMode === 'analysis' && (
+            <div className="space-y-8 sm:space-y-10">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Analysis Results
+                  {state.analyzedUrl && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      {(() => {
+                        try {
+                          return new URL(state.analyzedUrl).hostname;
+                        } catch {
+                          return state.analyzedUrl;
+                        }
+                      })()}
+                    </span>
+                  )}
+                </h2>
+                <div className="flex items-center gap-3">
+                  {/* Fetches Dropdown */}
                   <div className="relative">
                     <button
-                      onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-                      onBlur={() => setTimeout(() => setShowHistoryDropdown(false), 200)}
+                      onClick={() => setShowFetchDropdown(!showFetchDropdown)}
+                      onBlur={() => setTimeout(() => setShowFetchDropdown(false), 200)}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
                     >
                       <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      History
-                      <svg className={`h-4 w-4 text-gray-400 transition-transform ${showHistoryDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      {fetchCount} {fetchCount === 1 ? 'Fetch' : 'Fetches'}
+                      <svg className={`h-4 w-4 text-gray-400 transition-transform ${showFetchDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
-                    {showHistoryDropdown && (
-                      <div className="absolute right-0 top-full z-20 mt-1 w-72 max-h-64 overflow-y-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
-                        <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Recent analyses</p>
-                        {analysisHistory.map((entry, index) => {
-                          const hostname = (() => {
-                            try {
-                              return new URL(entry.url).hostname;
-                            } catch {
-                              return entry.url;
-                            }
-                          })();
-                          const timeAgo = (() => {
-                            const diff = Date.now() - new Date(entry.timestamp).getTime();
-                            const minutes = Math.floor(diff / 60000);
-                            if (minutes < 1) return 'just now';
-                            if (minutes < 60) return `${minutes}m ago`;
-                            const hours = Math.floor(minutes / 60);
-                            if (hours < 24) return `${hours}h ago`;
-                            const days = Math.floor(hours / 24);
-                            return `${days}d ago`;
-                          })();
-                          const isActive = state.analyzedUrl === entry.url;
-                          return (
-                            <button
-                              key={`${entry.url}-${entry.timestamp}`}
-                              onClick={() => {
-                                onLoadFromHistory(index);
-                                setShowHistoryDropdown(false);
-                              }}
-                              className={`block w-full px-3 py-2 text-left hover:bg-gray-50 ${isActive ? 'bg-indigo-50' : ''}`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className={`text-sm truncate ${isActive ? 'font-medium text-indigo-700' : 'text-gray-700'}`}>
-                                  {hostname}
-                                </span>
-                                <span className="ml-2 text-xs text-gray-400 flex-shrink-0">{timeAgo}</span>
-                              </div>
-                              <p className="mt-0.5 text-xs text-gray-400 truncate">{entry.url}</p>
-                            </button>
-                          );
-                        })}
+                    {showFetchDropdown && (
+                      <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+                        <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Sample count</p>
+                        {[1, 2, 3, 5].map((count) => (
+                          <button
+                            key={count}
+                            onClick={() => {
+                              onFetchCountChange(count);
+                              setShowFetchDropdown(false);
+                            }}
+                            className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${fetchCount === count ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-gray-700'}`}
+                          >
+                            {count} {count === 1 ? 'Fetch' : 'Fetches'}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
-                )}
-                {hasHistory && (
-                  <button
-                    onClick={handleCompare}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
-                  >
-                    Compare
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                )}
+                  {/* History Dropdown */}
+                  {analysisHistory.length > 0 && onLoadFromHistory && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+                        onBlur={() => setTimeout(() => setShowHistoryDropdown(false), 200)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                      >
+                        <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        History
+                        <svg className={`h-4 w-4 text-gray-400 transition-transform ${showHistoryDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {showHistoryDropdown && (
+                        <div className="absolute right-0 top-full z-20 mt-1 w-72 max-h-64 overflow-y-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+                          <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Recent analyses</p>
+                          {analysisHistory.map((entry, index) => {
+                            const hostname = (() => {
+                              try {
+                                return new URL(entry.url).hostname;
+                              } catch {
+                                return entry.url;
+                              }
+                            })();
+                            const timeAgo = (() => {
+                              const diff = Date.now() - new Date(entry.timestamp).getTime();
+                              const minutes = Math.floor(diff / 60000);
+                              if (minutes < 1) return 'just now';
+                              if (minutes < 60) return `${minutes}m ago`;
+                              const hours = Math.floor(minutes / 60);
+                              if (hours < 24) return `${hours}h ago`;
+                              const days = Math.floor(hours / 24);
+                              return `${days}d ago`;
+                            })();
+                            const isActive = state.analyzedUrl === entry.url;
+                            return (
+                              <button
+                                key={`${entry.url}-${entry.timestamp}`}
+                                onClick={() => {
+                                  onLoadFromHistory(index);
+                                  setShowHistoryDropdown(false);
+                                }}
+                                className={`block w-full px-3 py-2 text-left hover:bg-gray-50 ${isActive ? 'bg-indigo-50' : ''}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-sm truncate ${isActive ? 'font-medium text-indigo-700' : 'text-gray-700'}`}>
+                                    {hostname}
+                                  </span>
+                                  <span className="ml-2 text-xs text-gray-400 flex-shrink-0">{timeAgo}</span>
+                                </div>
+                                <p className="mt-0.5 text-xs text-gray-400 truncate">{entry.url}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {hasHistory && (
+                    <button
+                      onClick={handleCompare}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                    >
+                      Compare
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
+
+              <section>
+                <TechnicalMetrics
+                  structure={state.result.structure}
+                  semantics={state.result.semantics}
+                  fetchCount={fetchCount}
+                />
+              </section>
+
+              <section>
+                <InterpretationPanel
+                  structure={state.result.structure}
+                  semantics={state.result.semantics}
+                  fetchCount={fetchCount}
+                />
+              </section>
+
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={() => navigate('/help')}
+                  className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
+                >
+                  Help
+                </button>
+                <ExportButton result={state.result} url={url} />
+              </div>
+
+              <FooterNote />
             </div>
+          )}
 
-            <section>
-              <TechnicalMetrics
-                structure={state.result.structure}
-                semantics={state.result.semantics}
-                fetchCount={fetchCount}
-              />
-            </section>
-
-            <section>
-              <InterpretationPanel
-                structure={state.result.structure}
-                semantics={state.result.semantics}
-                fetchCount={fetchCount}
-              />
-            </section>
-
-            <div className="flex justify-between items-center mt-4">
-              <button
-                onClick={() => navigate('/help')}
-                className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
-              >
-                Help
-              </button>
-              <ExportButton result={state.result} url={url} />
-            </div>
-
-            <FooterNote />
-          </div>
-        )}
-
-        {state.status === 'done' && viewMode === 'compare' && (
-          <ComparisonContent entries={analysisHistory} onBack={handleBack} />
-        )}
+          {state.status === 'done' && viewMode === 'compare' && (
+            <ComparisonContent entries={analysisHistory} onBack={handleBack} />
+          )}
+        </div>
       </main>
     </div>
   );
