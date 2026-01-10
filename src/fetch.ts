@@ -1,5 +1,3 @@
-import { config } from './config';
-
 const BLOCKED_PATTERN =
   /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.0\.0\.0|\[::1\])/i;
 
