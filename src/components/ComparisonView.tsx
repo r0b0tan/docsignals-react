@@ -40,6 +40,16 @@ function generateComparisonCSV(entries: AnalysisEntry[]): string {
     ['Tables (total)', ...entries.map(e => e.result.semantics.tables.total.toString())],
     ['Tables (with headers)', ...entries.map(e => e.result.semantics.tables.withHeaders.toString())],
     ['Lang Attribute', ...entries.map(e => e.result.semantics.langAttribute ? 'Yes' : 'No')],
+    ['', ...entries.map(() => '')],
+    ['IMAGES', ...entries.map(() => '')],
+    ['Images (total)', ...entries.map(e => (e.result.semantics.images?.total ?? 0).toString())],
+    ['Images with alt', ...entries.map(e => (e.result.semantics.images?.withAlt ?? 0).toString())],
+    ['Images decorative (alt="")', ...entries.map(e => (e.result.semantics.images?.emptyAlt ?? 0).toString())],
+    ['Images missing alt', ...entries.map(e => (e.result.semantics.images?.missingAlt ?? 0).toString())],
+    ['Images in figure', ...entries.map(e => (e.result.semantics.images?.inFigure ?? 0).toString())],
+    ['Images with dimensions', ...entries.map(e => (e.result.semantics.images?.withDimensions ?? 0).toString())],
+    ['Images with srcset', ...entries.map(e => (e.result.semantics.images?.withSrcset ?? 0).toString())],
+    ['Images with lazy loading', ...entries.map(e => (e.result.semantics.images?.withLazyLoading ?? 0).toString())],
   ];
 
   return rows.map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');

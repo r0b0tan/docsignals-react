@@ -12,6 +12,17 @@ export interface StructureResult {
   customElements: number;
 }
 
+export interface ImageResult {
+  total: number;
+  withAlt: number;
+  emptyAlt: number;  // Decorative images (alt="")
+  missingAlt: number;
+  inFigure: number;  // Images wrapped in <figure>
+  withDimensions: number;  // Images with width/height attributes
+  withSrcset: number;  // Responsive images
+  withLazyLoading: number;  // loading="lazy"
+}
+
 export interface SemanticResult {
   classification: 'explicit' | 'partial' | 'opaque';
   headings: { h1Count: number; hasSkips: boolean };
@@ -22,6 +33,7 @@ export interface SemanticResult {
   lists: { total: number; ordered: number; unordered: number; description: number };
   tables: { total: number; withHeaders: number };
   langAttribute: boolean;
+  images: ImageResult;
 }
 
 export interface AnalysisResult {

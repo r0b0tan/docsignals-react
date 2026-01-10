@@ -230,6 +230,46 @@ function generateInterpretations(
     });
   }
 
+  // Images
+  if (semantics.images.total > 0) {
+    const { total, withAlt, emptyAlt, missingAlt, inFigure } = semantics.images;
+    
+    // Alt text coverage
+    if (missingAlt === 0) {
+      interpretations.push({
+        category: 'Image Accessibility',
+        finding: 'All images have alt attributes',
+        implication: 'Machines can distinguish between meaningful images (with descriptions) and decorative ones (empty alt).',
+      });
+    } else if (missingAlt > 0) {
+      const percent = Math.round((missingAlt / total) * 100);
+      interpretations.push({
+        category: 'Image Accessibility',
+        finding: `${missingAlt} image${missingAlt === 1 ? '' : 's'} missing alt attribute (${percent}%)`,
+        implication: 'Machines cannot determine whether these images convey meaning or are purely decorative.',
+      });
+    }
+
+    // Semantic context (figure/figcaption)
+    if (inFigure > 0) {
+      const percent = Math.round((inFigure / total) * 100);
+      interpretations.push({
+        category: 'Image Context',
+        finding: `${inFigure} image${inFigure === 1 ? '' : 's'} in figure elements (${percent}%)`,
+        implication: 'Figure markup provides semantic grouping and potential caption association for machine understanding.',
+      });
+    }
+
+    // Decorative images
+    if (emptyAlt > 0 && withAlt > 0) {
+      interpretations.push({
+        category: 'Image Classification',
+        finding: `${withAlt} meaningful, ${emptyAlt} decorative image${emptyAlt === 1 ? '' : 's'}`,
+        implication: 'Clear distinction between content images and decorative elements allows machines to prioritize relevant visuals.',
+      });
+    }
+  }
+
   return interpretations;
 }
 

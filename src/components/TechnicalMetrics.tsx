@@ -167,6 +167,81 @@ export function TechnicalMetrics({ structure, semantics, fetchCount }: Technical
             />
           </div>
         </div>
+
+        {/* Images Metrics */}
+        {semantics.images.total > 0 && (
+          <div className="mt-6 md:col-span-2">
+            <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+              Images
+            </h4>
+            <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
+              <div className="divide-y divide-gray-100">
+                <MetricRow
+                  label={<>Total images</>}
+                  value={semantics.images.total}
+                />
+                <MetricRow
+                  label={<>With <Code>alt</Code> text {' '}
+                    <Tooltip text="Images with descriptive alt text that conveys meaning to machines and screen readers.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={`${semantics.images.withAlt}/${semantics.images.total}`}
+                />
+                <MetricRow
+                  label={<>Decorative (<Code>alt=""</Code>) {' '}
+                    <Tooltip text="Images explicitly marked as decorative with empty alt attribute. Machines know to skip these.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={semantics.images.emptyAlt}
+                />
+                <MetricRow
+                  label={<>Missing <Code>alt</Code> {' '}
+                    <Tooltip text="Images without any alt attribute. Machines cannot determine if the image is meaningful or decorative.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={semantics.images.missingAlt}
+                />
+              </div>
+              <div className="divide-y divide-gray-100">
+                <MetricRow
+                  label={<>In <Code>figure</Code> elements {' '}
+                    <Tooltip text="Images wrapped in semantic <figure> elements, often with <figcaption> for machine-readable context.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={semantics.images.inFigure}
+                />
+                <MetricRow
+                  label={<>With dimensions {' '}
+                    <Tooltip text="Images with explicit width/height attributes, allowing machines to understand layout before loading.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={`${semantics.images.withDimensions}/${semantics.images.total}`}
+                />
+                <MetricRow
+                  label={<>Responsive (<Code>srcset</Code>) {' '}
+                    <Tooltip text="Images using srcset for responsive variants. Indicates structured image delivery.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={semantics.images.withSrcset}
+                />
+                <MetricRow
+                  label={<>Lazy loading {' '}
+                    <Tooltip text="Images with loading='lazy' attribute for deferred loading.">
+                      <span className="text-indigo-700">ⓘ</span>
+                    </Tooltip>
+                  </>}
+                  value={semantics.images.withLazyLoading}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

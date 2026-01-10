@@ -213,6 +213,20 @@ const CORE_METRICS: MetricDefinition[] = [
     getValue: (e) => e.result.semantics.linkIssues,
     render: (v, allValues) => <IssueDisplay count={Number(v)} allCounts={allValues.map(Number)} />,
   },
+  {
+    key: 'imagesTotal',
+    label: 'Images',
+    group: 'quality',
+    getValue: (e) => e.result.semantics.images?.total ?? 0,
+    render: (v) => <span className="text-sm tabular-nums text-slate-700">{v}</span>,
+  },
+  {
+    key: 'imagesMissingAlt',
+    label: 'Images Missing Alt',
+    group: 'quality',
+    getValue: (e) => e.result.semantics.images?.missingAlt ?? 0,
+    render: (v, allValues) => <IssueDisplay count={Number(v)} allCounts={allValues.map(Number)} />,
+  },
 ];
 
 function MetricGroup({ title, children }: { title: string; children: React.ReactNode }) {

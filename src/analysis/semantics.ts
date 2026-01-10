@@ -100,6 +100,44 @@ export function checkSemantics(html: string): SemanticResult {
   const htmlEl = doc.documentElement;
   const langAttribute = htmlEl?.hasAttribute('lang') ?? false;
 
+  // Images
+  const imgElements = doc.querySelectorAll('img');
+  const imagesTotal = imgElements.length;
+  let imagesWithAlt = 0;
+  let imagesEmptyAlt = 0;
+  let imagesMissingAlt = 0;
+  let imagesInFigure = 0;
+  let imagesWithDimensions = 0;
+  let imagesWithSrcset = 0;
+  let imagesWithLazyLoading = 0;
+
+  for (const img of imgElements) {
+    const altAttr = img.getAttribute('alt');
+    if (altAttr === null) {
+      imagesMissingAlt++;
+    } else if (altAttr === '') {
+      imagesEmptyAlt++;  // Intentionally decorative
+    } else {
+      imagesWithAlt++;
+    }
+
+    if (img.closest('figure')) {
+      imagesInFigure++;
+    }
+
+    if (img.hasAttribute('width') && img.hasAttribute('height')) {
+      imagesWithDimensions++;
+    }
+
+    if (img.hasAttribute('srcset')) {
+      imagesWithSrcset++;
+    }
+
+    if (img.getAttribute('loading') === 'lazy') {
+      imagesWithLazyLoading++;
+    }
+  }
+
   // Classification
   let score = 0;
   if (h1Count === 1 && !hasSkips) score += 25;
@@ -126,5 +164,15 @@ export function checkSemantics(html: string): SemanticResult {
     lists: { total: listsTotal, ordered: orderedLists, unordered: unorderedLists, description: descriptionLists },
     tables: { total: tablesTotal, withHeaders: tablesWithHeaders },
     langAttribute,
+    images: {
+      total: imagesTotal,
+      withAlt: imagesWithAlt,
+      emptyAlt: imagesEmptyAlt,
+      missingAlt: imagesMissingAlt,
+      inFigure: imagesInFigure,
+      withDimensions: imagesWithDimensions,
+      withSrcset: imagesWithSrcset,
+      withLazyLoading: imagesWithLazyLoading,
+    },
   };
 }

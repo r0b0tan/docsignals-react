@@ -45,6 +45,16 @@ function generateCSV(result: AnalysisResult, url: string): string {
     ['Tables (total)', result.semantics.tables.total.toString()],
     ['Tables (with headers)', result.semantics.tables.withHeaders.toString()],
     ['Lang Attribute', result.semantics.langAttribute ? 'Yes' : 'No'],
+    ['', ''],
+    ['IMAGES', ''],
+    ['Images (total)', result.semantics.images.total.toString()],
+    ['Images with alt', result.semantics.images.withAlt.toString()],
+    ['Images decorative (alt="")', result.semantics.images.emptyAlt.toString()],
+    ['Images missing alt', result.semantics.images.missingAlt.toString()],
+    ['Images in figure', result.semantics.images.inFigure.toString()],
+    ['Images with dimensions', result.semantics.images.withDimensions.toString()],
+    ['Images with srcset', result.semantics.images.withSrcset.toString()],
+    ['Images with lazy loading', result.semantics.images.withLazyLoading.toString()],
   ];
 
   // Use semicolon as delimiter for better Excel compatibility (especially in European locales)
