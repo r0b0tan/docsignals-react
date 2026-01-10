@@ -19,7 +19,7 @@ const helpEntries: HelpEntry[] = [
     category: 'Structure',
     shortDescription: 'How consistent is the HTML structure across repeated visits?',
     longDescription:
-      'DevSignals fetches the same URL multiple times and compares the resulting DOM tree shape (e.g., element nesting, tag sequence, and the presence/absence of structural nodes). If repeated fetches yield an effectively identical structure, downstream automation—such as crawlers, content extractors, test automation, and assistive-tech mappings—can rely on stable selectors and a stable reading order. If the structure changes between requests (e.g., due to personalization, A/B tests, geo-variation, rotating ad slots, or client-side rendering differences), identical queries can return different nodes or different content regions, leading to brittle extraction and inconsistent interpretation.',
+      'DocSignals fetches the same URL multiple times and compares the resulting DOM tree shape (e.g., element nesting, tag sequence, and the presence/absence of structural nodes). If repeated fetches yield an effectively identical structure, downstream automation—such as crawlers, content extractors, test automation, and assistive-tech mappings—can rely on stable selectors and a stable reading order. If the structure changes between requests (e.g., due to personalization, A/B tests, geo-variation, rotating ad slots, or client-side rendering differences), identical queries can return different nodes or different content regions, leading to brittle extraction and inconsistent interpretation.',
     example: 'A page with randomly positioned ad banners has different structure on each fetch.',
     goodValue: 'Deterministic (identical across multiple fetches)',
     badValue: 'Non-deterministic (different structure on each fetch)',
@@ -39,7 +39,7 @@ const helpEntries: HelpEntry[] = [
     category: 'Structure',
     shortDescription: 'How many main sections does the page have at the top level?',
     longDescription:
-      'This signal approximates whether the page exposes a clear, machine-discernible “layout skeleton”. DevSignals looks for high-level regions that segment the document (commonly direct children of <body> and/or primary containers like <main>). A small number of well-defined sections (e.g., header, navigation, main content, sidebar, footer) makes it easier for machines to isolate primary content, ignore boilerplate, and establish a stable reading order. Pages that present one monolithic container or many unstructured siblings are harder to segment reliably.',
+      'This signal approximates whether the page exposes a clear, machine-discernible “layout skeleton”. DocSignals looks for high-level regions that segment the document (commonly direct children of <body> and/or primary containers like <main>). A small number of well-defined sections (e.g., header, navigation, main content, sidebar, footer) makes it easier for machines to isolate primary content, ignore boilerplate, and establish a stable reading order. Pages that present one monolithic container or many unstructured siblings are harder to segment reliably.',
     goodValue: '3 or more clearly defined sections',
     badValue: 'No recognizable segmentation',
   },
