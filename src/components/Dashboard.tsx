@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { AnalysisResult } from '../analysis/types';
 import { HeaderBar } from './HeaderBar';
 import { TechnicalMetrics } from './TechnicalMetrics';
@@ -374,6 +375,7 @@ function downloadFile(content: string, filename: string, mimeType: string) {
 }
 
 function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBack: () => void }) {
+  const navigate = useNavigate();
   const [showIdentical, setShowIdentical] = useState(false);
   const allEntries = getAnalysisHistory();
   const displayEntries = entries.slice(0, 4);
@@ -484,7 +486,7 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
       {/* Export Section - same position as Analysis view */}
       <div className="flex justify-between items-center mt-4">
         <button
-          onClick={() => window.open('/help', '_blank')}
+          onClick={() => navigate('/help')}
           className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
         >
           Help
@@ -524,6 +526,7 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
 // =============================================================================
 
 export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFetchCountChange, onLoadFromHistory }: DashboardProps) {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('analysis');
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [showFetchDropdown, setShowFetchDropdown] = useState(false);
@@ -721,7 +724,7 @@ export function Dashboard({ state, url, onUrlChange, onSubmit, fetchCount, onFet
 
             <div className="flex justify-between items-center mt-4">
               <button
-                onClick={() => window.open('/help', '_blank')}
+                onClick={() => navigate('/help')}
                 className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
               >
                 Help

@@ -51,7 +51,7 @@ export function HeaderBar({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
-        if (url && !isRunning) {
+        if (url && !isRunning && onSubmit) {
           onSubmit();
         }
       }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { HeaderBar } from './HeaderBar';
 import { FooterNote } from './FooterNote';
 
@@ -268,6 +268,10 @@ export function HelpPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const filteredEntries = useMemo(() => {
     let entries = helpEntries;
 
@@ -301,13 +305,13 @@ export function HelpPage() {
   }, [filteredEntries]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <HeaderBar mode="help" />
 
       {/* Main content */}
-      <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mx-auto max-w-5xl space-y-8 sm:space-y-10">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="space-y-8 sm:space-y-10">
           {/* Page title row - same style as Analysis Results / Comparing URLs */}
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-gray-900">
