@@ -23,6 +23,24 @@ export function FooterNote() {
         >
           GitHub
         </a>
+        {" "}·{" "}
+        <a
+          href="https://christophbauer.dev/dataprivacy/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 hover:text-indigo-500 transition-colors"
+        >
+          Data Privacy
+        </a>
+        {" "}·{" "}
+        <a
+          href="https://christophbauer.dev/legalnotice/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 hover:text-indigo-500 transition-colors"
+        >
+          Legal Notice
+        </a>
       </p>
     </footer>
   );
