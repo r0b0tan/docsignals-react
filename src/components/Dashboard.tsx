@@ -863,7 +863,7 @@ export function Dashboard({
               </div>
 
               <section>
-                <TechnicalMetrics
+                <InterpretationPanel
                   structure={state.result.structure}
                   semantics={state.result.semantics}
                   fetchCount={fetchCount}
@@ -871,7 +871,7 @@ export function Dashboard({
               </section>
 
               <section>
-                <InterpretationPanel
+                <TechnicalMetrics
                   structure={state.result.structure}
                   semantics={state.result.semantics}
                   fetchCount={fetchCount}
