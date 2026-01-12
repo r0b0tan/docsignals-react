@@ -8,7 +8,7 @@ type State =
   | { status: 'idle' }
   | { status: 'running'; progress: number; currentStep: string }
   | { status: 'error'; message: string }
-  | { status: 'done'; result: AnalysisResult; analyzedUrl: string };
+  | { status: 'done'; result: AnalysisResult; analyzedUrl: string; analyzedAt: string };
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -26,7 +26,7 @@ export function HomePage() {
     if (history.length > 0) {
       const last = history[0];
       setUrl(last.url);
-      setState({ status: 'done', result: last.result, analyzedUrl: last.url });
+      setState({ status: 'done', result: last.result, analyzedUrl: last.url, analyzedAt: last.timestamp });
     }
   }, []);
 
@@ -36,7 +36,7 @@ export function HomePage() {
     if (history[index]) {
       const entry = history[index];
       setUrl(entry.url);
-      setState({ status: 'done', result: entry.result, analyzedUrl: entry.url });
+      setState({ status: 'done', result: entry.result, analyzedUrl: entry.url, analyzedAt: entry.timestamp });
     }
   }
 
@@ -117,9 +117,10 @@ export function HomePage() {
 
       const result = analyze(samples, validation.url);
 
+      const timestamp = new Date().toISOString();
       saveAnalysis(validation.url, result);
 
-      setState({ status: 'done', result, analyzedUrl: validation.url });
+      setState({ status: 'done', result, analyzedUrl: validation.url, analyzedAt: timestamp });
     } catch (e) {
       setState({
         status: 'error',

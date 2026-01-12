@@ -89,13 +89,13 @@ export function HeaderBar({
         {/* App shell: brand left, action right */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {/* Brand block: logo, name and claim inline */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 md:justify-start">
             <img src={`${import.meta.env.BASE_URL}docsignals.png`} alt="DocSignals" className="h-5 w-5" />
             <h1 className="text-lg font-semibold tracking-tight text-indigo-600">
               DocSignals
             </h1>
-            <span className="text-gray-300">|</span>
-            <span className="hidden text-sm text-gray-400 sm:inline">
+            <span className="hidden text-gray-300 md:inline">|</span>
+            <span className="hidden text-sm text-gray-400 md:inline">
               Structural signals for machine interpretability
             </span>
           </div>
@@ -116,7 +116,7 @@ export function HeaderBar({
                         placeholder="https://example.com"
                         className="w-full rounded-lg bg-gray-50 px-3 py-2 pr-16 text-sm text-gray-900 ring-1 ring-gray-200/80 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-gray-300"
                       />
-                      <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-500">
+                      <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-500 sm:block">
                         ⌘↵
                       </kbd>
                     </div>
@@ -171,8 +171,11 @@ export function HeaderBar({
               <button
                 type="button"
                 onClick={handleHelpClick}
-                className="shrink-0 rounded-lg bg-white px-4 py-2 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
+                className="inline-flex h-8 items-center gap-1.5 shrink-0 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
               >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
                 Back
               </button>
             )}

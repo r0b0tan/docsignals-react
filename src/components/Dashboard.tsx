@@ -9,11 +9,56 @@ import { FooterNote } from './FooterNote';
 import { getAnalysisHistory, clearAnalysisHistory } from './ComparisonView';
 import { Tooltip } from './Tooltip';
 
+// =============================================================================
+// RELATIVE TIME FORMATTING
+// =============================================================================
+
+function getRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return 'Just now';
+  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffHour < 24) return `${diffHour}h ago`;
+  if (diffDay === 1) return 'Yesterday';
+  if (diffDay < 7) return `${diffDay} days ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getFullTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function TimestampPill({ timestamp }: { timestamp: string }) {
+  return (
+    <Tooltip text={getFullTimestamp(timestamp)}>
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 cursor-default">
+        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        {getRelativeTime(timestamp)}
+      </span>
+    </Tooltip>
+  );
+}
+
 type DashboardState =
   | { status: 'idle' }
   | { status: 'running'; progress: number; currentStep: string }
   | { status: 'error'; message: string }
-  | { status: 'done'; result: AnalysisResult; analyzedUrl?: string };
+  | { status: 'done'; result: AnalysisResult; analyzedUrl?: string; analyzedAt?: string };
 
 type ViewMode = 'analysis' | 'compare';
 
@@ -293,8 +338,8 @@ function CompareUrlHeader({ entries }: { entries: AnalysisEntry[] }) {
           <div className="truncate text-sm font-medium text-slate-700" title={entry.url}>
             {new URL(entry.url).hostname.replace('www.', '')}
           </div>
-          <div className="text-xs text-slate-400">
-            {new Date(entry.timestamp).toLocaleDateString()}
+          <div className="mt-1">
+            <TimestampPill timestamp={entry.timestamp} />
           </div>
         </div>
       ))}
@@ -431,7 +476,7 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
             className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back
           </button>
@@ -489,9 +534,12 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => navigate('/help')}
-          className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
         >
           Help
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Export:</span>
@@ -646,33 +694,37 @@ export function Dashboard({
           {state.status === 'done' && viewMode === 'analysis' && (
             <div className="space-y-8 sm:space-y-10">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Analysis Results
-                  {state.analyzedUrl && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">
-                      {(() => {
-                        try {
-                          return new URL(state.analyzedUrl).hostname;
-                        } catch {
-                          return state.analyzedUrl;
-                        }
-                      })()}
-                    </span>
-                  )}
-                </h2>
                 <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Analysis Results
+                    {state.analyzedUrl && (
+                      <span className="ml-2 text-sm font-normal text-gray-500">
+                        {(() => {
+                          try {
+                            return new URL(state.analyzedUrl).hostname;
+                          } catch {
+                            return state.analyzedUrl;
+                          }
+                        })()}
+                      </span>
+                    )}
+                  </h2>
+                  {state.analyzedAt && <TimestampPill timestamp={state.analyzedAt} />}
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3">
                   {/* Fetches Dropdown */}
                   <div className="relative">
                     <button
                       onClick={() => setShowFetchDropdown(!showFetchDropdown)}
                       onBlur={() => setTimeout(() => setShowFetchDropdown(false), 200)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-2 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 sm:px-3"
+                      title={`${fetchCount} ${fetchCount === 1 ? 'Fetch' : 'Fetches'}`}
                     >
                       <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      {fetchCount} {fetchCount === 1 ? 'Fetch' : 'Fetches'}
-                      <svg className={`h-4 w-4 text-gray-400 transition-transform ${showFetchDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <span className="hidden sm:inline">{fetchCount} {fetchCount === 1 ? 'Fetch' : 'Fetches'}</span>
+                      <svg className={`hidden h-4 w-4 text-gray-400 transition-transform sm:block ${showFetchDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
@@ -700,13 +752,14 @@ export function Dashboard({
                       <button
                         onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
                         onBlur={() => setTimeout(() => setShowHistoryDropdown(false), 200)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-2 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 sm:px-3"
+                        title="History"
                       >
                         <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        History
-                        <svg className={`h-4 w-4 text-gray-400 transition-transform ${showHistoryDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <span className="hidden sm:inline">History</span>
+                        <svg className={`hidden h-4 w-4 text-gray-400 transition-transform sm:block ${showHistoryDropdown ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
@@ -721,17 +774,7 @@ export function Dashboard({
                                 return entry.url;
                               }
                             })();
-                            const timeAgo = (() => {
-                              const diff = Date.now() - new Date(entry.timestamp).getTime();
-                              const minutes = Math.floor(diff / 60000);
-                              if (minutes < 1) return 'just now';
-                              if (minutes < 60) return `${minutes}m ago`;
-                              const hours = Math.floor(minutes / 60);
-                              if (hours < 24) return `${hours}h ago`;
-                              const days = Math.floor(hours / 24);
-                              return `${days}d ago`;
-                            })();
-                            const isActive = state.analyzedUrl === entry.url;
+                            const isActive = state.analyzedUrl === entry.url && state.analyzedAt === entry.timestamp;
                             return (
                               <button
                                 key={`${entry.url}-${entry.timestamp}`}
@@ -741,11 +784,15 @@ export function Dashboard({
                                 }}
                                 className={`block w-full px-3 py-2 text-left hover:bg-gray-50 ${isActive ? 'bg-indigo-50' : ''}`}
                               >
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between gap-2">
                                   <span className={`text-sm truncate ${isActive ? 'font-medium text-indigo-700' : 'text-gray-700'}`}>
                                     {hostname}
                                   </span>
-                                  <span className="ml-2 text-xs text-gray-400 flex-shrink-0">{timeAgo}</span>
+                                  <Tooltip text={getFullTimestamp(entry.timestamp)}>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500 flex-shrink-0 cursor-default">
+                                      {getRelativeTime(entry.timestamp)}
+                                    </span>
+                                  </Tooltip>
                                 </div>
                                 <p className="mt-0.5 text-xs text-gray-400 truncate">{entry.url}</p>
                               </button>
@@ -758,9 +805,13 @@ export function Dashboard({
                   {hasHistory && (
                     <button
                       onClick={handleCompare}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-2 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 sm:px-3"
+                      title="Compare"
                     >
-                      Compare
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                      </svg>
+                      <span className="hidden sm:inline">Compare</span>
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -788,9 +839,12 @@ export function Dashboard({
               <div className="flex justify-between items-center mt-4">
                 <button
                   onClick={() => navigate('/help')}
-                  className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-indigo-600 ring-1 ring-indigo-600 hover:bg-indigo-50"
                 >
                   Help
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
                 <ExportButton result={state.result} url={url} />
               </div>
