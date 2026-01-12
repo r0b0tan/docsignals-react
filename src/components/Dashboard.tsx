@@ -299,70 +299,6 @@ const CORE_METRICS: MetricDefinition[] = [
   },
 ];
 
-function MetricGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="border-b border-slate-100 last:border-b-0">
-      <div className="bg-slate-50 px-4 py-1.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{title}</span>
-      </div>
-      <div className="bg-white">{children}</div>
-    </div>
-  );
-}
-
-function MetricRow({ label, values, isIdentical, showIdentical }: { label: string; values: React.ReactNode[]; isIdentical: boolean; showIdentical: boolean }) {
-  if (isIdentical && !showIdentical) return null;
-
-  return (
-    <div
-      className={`grid items-center border-b border-slate-50 py-2.5 ${isIdentical ? 'opacity-40' : ''}`}
-      style={{ gridTemplateColumns: `160px repeat(${values.length}, 1fr)` }}
-    >
-      <div className="sticky left-0 bg-white px-4 text-sm text-slate-500">{label}</div>
-      {values.map((value, i) => (
-        <div key={i} className="px-4">{value}</div>
-      ))}
-    </div>
-  );
-}
-
-function CompareUrlHeader({ entries }: { entries: AnalysisEntry[] }) {
-  return (
-    <div
-      className="sticky top-0 z-10 grid border-b border-slate-200 bg-slate-50"
-      style={{ gridTemplateColumns: `160px repeat(${entries.length}, 1fr)` }}
-    >
-      <div className="sticky left-0 bg-slate-50 px-4 py-3" />
-      {entries.map((entry, i) => (
-        <div key={i} className="px-4 py-3">
-          <div className="truncate text-sm font-medium text-slate-700" title={entry.url}>
-            {new URL(entry.url).hostname.replace('www.', '')}
-          </div>
-          <div className="mt-1">
-            <TimestampPill timestamp={entry.timestamp} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CompareSignalRow({ entries }: { entries: AnalysisEntry[] }) {
-  return (
-    <div
-      className="grid items-center border-b border-slate-200 bg-white py-4"
-      style={{ gridTemplateColumns: `160px repeat(${entries.length}, 1fr)` }}
-    >
-      <div className="sticky left-0 bg-white px-4 text-sm font-medium text-slate-700">Result</div>
-      {entries.map((entry, i) => (
-        <div key={i} className="px-4">
-          <SignalLabel struct={entry.result.structure.classification} sem={entry.result.semantics.classification} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function generateComparisonCSV(entries: AnalysisEntry[]): string {
   const headers = ['Metric', ...entries.map((_, i) => `Analysis ${i + 1}`)];
   const rows = [
@@ -486,28 +422,103 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
       {/* Comparison Table */}
       <section className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200/60">
         <div className="overflow-x-auto">
-          <div className="min-w-max">
-            <CompareUrlHeader entries={displayEntries} />
-            <CompareSignalRow entries={displayEntries} />
-
-            <MetricGroup title="Structure">
+          <table className="w-full min-w-max border-collapse">
+            {/* URL Header */}
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="w-40 sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-3" />
+                {displayEntries.map((entry, i) => (
+                  <th key={i} className="min-w-[180px] px-4 py-3 text-left font-normal">
+                    <div className="truncate text-sm font-medium text-slate-700" title={entry.url}>
+                      {new URL(entry.url).hostname.replace('www.', '')}
+                    </div>
+                    <div className="mt-1">
+                      <TimestampPill timestamp={entry.timestamp} />
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* Signal row */}
+              <tr className="border-b border-slate-200 bg-white">
+                <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-3">
+                  <span className="text-sm font-medium text-slate-700">Result</span>
+                </td>
+                {displayEntries.map((entry, i) => (
+                  <td key={i} className="px-4 py-3">
+                    <SignalLabel struct={entry.result.structure.classification} sem={entry.result.semantics.classification} />
+                  </td>
+                ))}
+              </tr>
+              {/* Structure group header */}
+              <tr className="bg-slate-50">
+                <td className="sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Structure</span>
+                </td>
+                {displayEntries.map((_, i) => (
+                  <td key={i} className="px-4 py-1.5" />
+                ))}
+              </tr>
+              {/* Structure metrics */}
               {structureMetrics.map((m) => (
-                <MetricRow key={m.key} label={m.label} values={m.renderedValues} isIdentical={m.isIdentical} showIdentical={showIdentical} />
+                (!m.isIdentical || showIdentical) && (
+                  <tr key={m.key} className={`border-b border-slate-50 ${m.isIdentical ? 'opacity-40' : ''}`}>
+                    <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-2.5">
+                      <span className="text-sm text-slate-500">{m.label}</span>
+                    </td>
+                    {m.renderedValues.map((value, i) => (
+                      <td key={i} className="px-4 py-2.5">{value}</td>
+                    ))}
+                  </tr>
+                )
               ))}
-            </MetricGroup>
-
-            <MetricGroup title="Semantics">
+              {/* Semantics group header */}
+              <tr className="bg-slate-50">
+                <td className="sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Semantics</span>
+                </td>
+                {displayEntries.map((_, i) => (
+                  <td key={i} className="px-4 py-1.5" />
+                ))}
+              </tr>
+              {/* Semantics metrics */}
               {semanticsMetrics.map((m) => (
-                <MetricRow key={m.key} label={m.label} values={m.renderedValues} isIdentical={m.isIdentical} showIdentical={showIdentical} />
+                (!m.isIdentical || showIdentical) && (
+                  <tr key={m.key} className={`border-b border-slate-50 ${m.isIdentical ? 'opacity-40' : ''}`}>
+                    <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-2.5">
+                      <span className="text-sm text-slate-500">{m.label}</span>
+                    </td>
+                    {m.renderedValues.map((value, i) => (
+                      <td key={i} className="px-4 py-2.5">{value}</td>
+                    ))}
+                  </tr>
+                )
               ))}
-            </MetricGroup>
-
-            <MetricGroup title="Quality">
+              {/* Quality group header */}
+              <tr className="bg-slate-50">
+                <td className="sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Quality</span>
+                </td>
+                {displayEntries.map((_, i) => (
+                  <td key={i} className="px-4 py-1.5" />
+                ))}
+              </tr>
+              {/* Quality metrics */}
               {qualityMetrics.map((m) => (
-                <MetricRow key={m.key} label={m.label} values={m.renderedValues} isIdentical={m.isIdentical} showIdentical={showIdentical} />
+                (!m.isIdentical || showIdentical) && (
+                  <tr key={m.key} className={`border-b border-slate-50 ${m.isIdentical ? 'opacity-40' : ''}`}>
+                    <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-2.5">
+                      <span className="text-sm text-slate-500">{m.label}</span>
+                    </td>
+                    {m.renderedValues.map((value, i) => (
+                      <td key={i} className="px-4 py-2.5">{value}</td>
+                    ))}
+                  </tr>
+                )
               ))}
-            </MetricGroup>
-          </div>
+            </tbody>
+          </table>
         </div>
 
         {/* Difference filter - inside the card */}
