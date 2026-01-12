@@ -23,7 +23,8 @@ export function FooterNote() {
         >
           GitHub
         </a>
-        {" "}·{" "}
+      </p>
+      <p className="text-xs text-gray-500">
         <a
           href="https://christophbauer.dev/dataprivacy/"
           target="_blank"

@@ -739,7 +739,7 @@ export function Dashboard({
                       </svg>
                     </button>
                     {showFetchDropdown && (
-                      <div className="absolute right-0 top-full z-20 mt-1 w-36 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+                      <div className="absolute left-0 top-full z-20 mt-1 w-36 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5 sm:left-auto sm:right-0">
                         <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Sample count</p>
                         {[1, 2, 3, 5].map((count) => (
                           <button
@@ -774,7 +774,7 @@ export function Dashboard({
                         </svg>
                       </button>
                       {showHistoryDropdown && (
-                        <div className="absolute right-0 top-full z-20 mt-1 w-72 max-h-64 overflow-y-auto overflow-x-hidden rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+                        <div className="absolute left-1/2 top-full z-20 mt-1 w-72 max-h-64 -translate-x-1/2 overflow-y-auto overflow-x-hidden rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5 sm:left-auto sm:right-0 sm:translate-x-0">
                           <p className="px-3 py-1.5 text-xs font-medium text-gray-400">Recent analyses</p>
                           {analysisHistory.map((entry, index) => {
                             const hostname = (() => {
