@@ -8,6 +8,7 @@ import { ExportButton } from './ExportButton';
 import { FooterNote } from './FooterNote';
 import { getAnalysisHistory, clearAnalysisHistory } from './ComparisonView';
 import { Tooltip } from './Tooltip';
+import { ConfirmModal } from './ConfirmModal';
 
 // =============================================================================
 // RELATIVE TIME FORMATTING
@@ -381,18 +382,22 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
   const semanticsMetrics = metricData.filter((m) => m.group === 'semantics');
   const qualityMetrics = metricData.filter((m) => m.group === 'quality');
 
+  const [showClearModal, setShowClearModal] = useState(false);
+
   const handleClearHistory = () => {
-    if (window.confirm('Clear all analysis history?')) {
-      clearAnalysisHistory();
-      window.location.reload();
-    }
+    setShowClearModal(true);
+  };
+
+  const confirmClearHistory = () => {
+    clearAnalysisHistory();
+    window.location.reload();
   };
 
   return (
     <div className="space-y-8 sm:space-y-10">
       {/* Header row - same style as Analysis Results */}
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-4">
+        <h2 className="text-lg font-semibold text-gray-900 text-center sm:text-left">
           Comparing {displayEntries.length} URLs
           {allEntries.length > 4 && (
             <span className="ml-2 text-sm font-normal text-gray-500">
@@ -400,21 +405,24 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
             </span>
           )}
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={handleClearHistory}
-            className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
           >
-            Clear History
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Clear History</span>
           </button>
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            <span>Back</span>
           </button>
         </div>
       </div>
@@ -422,13 +430,13 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
       {/* Comparison Table */}
       <section className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200/60">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-max border-collapse">
+          <table className="w-full min-w-max border-separate border-spacing-0">
             {/* URL Header */}
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="w-40 sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-3" />
+              <tr className="bg-slate-50">
+                <th className="w-40 sticky left-0 bg-slate-50 z-10 px-4 py-3 border-b border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" />
                 {displayEntries.map((entry, i) => (
-                  <th key={i} className="min-w-[180px] px-4 py-3 text-left font-normal">
+                  <th key={i} className="min-w-[180px] px-4 py-3 text-left font-normal border-b border-slate-200">
                     <div className="truncate text-sm font-medium text-slate-700" title={entry.url}>
                       {new URL(entry.url).hostname.replace('www.', '')}
                     </div>
@@ -441,19 +449,19 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
             </thead>
             <tbody>
               {/* Signal row */}
-              <tr className="border-b border-slate-200 bg-white">
-                <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-3">
+              <tr className="bg-white">
+                <td className="sticky left-0 bg-white z-10 px-4 py-3 border-b border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                   <span className="text-sm font-medium text-slate-700">Result</span>
                 </td>
                 {displayEntries.map((entry, i) => (
-                  <td key={i} className="px-4 py-3">
+                  <td key={i} className="px-4 py-3 border-b border-slate-200">
                     <SignalLabel struct={entry.result.structure.classification} sem={entry.result.semantics.classification} />
                   </td>
                 ))}
               </tr>
               {/* Structure group header */}
               <tr className="bg-slate-50">
-                <td className="sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-1.5">
+                <td className="sticky left-0 bg-slate-50 z-10 px-4 py-1.5 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Structure</span>
                 </td>
                 {displayEntries.map((_, i) => (
@@ -463,19 +471,19 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
               {/* Structure metrics */}
               {structureMetrics.map((m) => (
                 (!m.isIdentical || showIdentical) && (
-                  <tr key={m.key} className={`border-b border-slate-50 ${m.isIdentical ? 'opacity-40' : ''}`}>
-                    <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-2.5">
+                  <tr key={m.key} className={`${m.isIdentical ? 'opacity-40' : ''}`}>
+                    <td className="sticky left-0 bg-white z-10 px-4 py-2.5 border-b border-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       <span className="text-sm text-slate-500">{m.label}</span>
                     </td>
                     {m.renderedValues.map((value, i) => (
-                      <td key={i} className="px-4 py-2.5">{value}</td>
+                      <td key={i} className="px-4 py-2.5 border-b border-slate-50">{value}</td>
                     ))}
                   </tr>
                 )
               ))}
               {/* Semantics group header */}
               <tr className="bg-slate-50">
-                <td className="sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-1.5">
+                <td className="sticky left-0 bg-slate-50 z-10 px-4 py-1.5 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Semantics</span>
                 </td>
                 {displayEntries.map((_, i) => (
@@ -485,19 +493,19 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
               {/* Semantics metrics */}
               {semanticsMetrics.map((m) => (
                 (!m.isIdentical || showIdentical) && (
-                  <tr key={m.key} className={`border-b border-slate-50 ${m.isIdentical ? 'opacity-40' : ''}`}>
-                    <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-2.5">
+                  <tr key={m.key} className={`${m.isIdentical ? 'opacity-40' : ''}`}>
+                    <td className="sticky left-0 bg-white z-10 px-4 py-2.5 border-b border-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       <span className="text-sm text-slate-500">{m.label}</span>
                     </td>
                     {m.renderedValues.map((value, i) => (
-                      <td key={i} className="px-4 py-2.5">{value}</td>
+                      <td key={i} className="px-4 py-2.5 border-b border-slate-50">{value}</td>
                     ))}
                   </tr>
                 )
               ))}
               {/* Quality group header */}
               <tr className="bg-slate-50">
-                <td className="sticky left-0 bg-slate-50 z-10 border-r border-slate-200 px-4 py-1.5">
+                <td className="sticky left-0 bg-slate-50 z-10 px-4 py-1.5 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Quality</span>
                 </td>
                 {displayEntries.map((_, i) => (
@@ -507,12 +515,12 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
               {/* Quality metrics */}
               {qualityMetrics.map((m) => (
                 (!m.isIdentical || showIdentical) && (
-                  <tr key={m.key} className={`border-b border-slate-50 ${m.isIdentical ? 'opacity-40' : ''}`}>
-                    <td className="sticky left-0 bg-white z-10 border-r border-slate-200 px-4 py-2.5">
+                  <tr key={m.key} className={`${m.isIdentical ? 'opacity-40' : ''}`}>
+                    <td className="sticky left-0 bg-white z-10 px-4 py-2.5 border-b border-slate-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       <span className="text-sm text-slate-500">{m.label}</span>
                     </td>
                     {m.renderedValues.map((value, i) => (
-                      <td key={i} className="px-4 py-2.5">{value}</td>
+                      <td key={i} className="px-4 py-2.5 border-b border-slate-50">{value}</td>
                     ))}
                   </tr>
                 )
@@ -578,6 +586,16 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
       </div>
 
       <FooterNote />
+
+      <ConfirmModal
+        isOpen={showClearModal}
+        title="Clear History"
+        message="Are you sure you want to clear all analysis history? This action cannot be undone."
+        confirmLabel="Clear"
+        cancelLabel="Cancel"
+        onConfirm={confirmClearHistory}
+        onCancel={() => setShowClearModal(false)}
+      />
     </div>
   );
 }
