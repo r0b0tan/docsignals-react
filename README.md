@@ -65,62 +65,92 @@ npm run preview
 
 ---
 
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Environment
+
+Copy the example environment file and set your API key:
+
+```bash
+cp .env .env.local
+```
+
+Edit `.env.local`:
+
+```env
+VITE_PROXY_URL=/proxy
+VITE_PROXY_API_KEY=your-secret-api-key
+```
+
+### 3. Deploy the Cloudflare Worker (Production)
+
+The proxy worker is located in `worker/proxy.js`. It requires:
+- API Key authentication
+- CORS origin validation
+- Rate limiting (10 requests/minute per IP)
+- SSRF protection
+
+```bash
+cd worker
+
+# Install wrangler if needed
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Set the API key secret (must match VITE_PROXY_API_KEY)
+wrangler secret put PROXY_API_KEY
+
+# Deploy
+wrangler deploy
+```
+
+After deployment, update the proxy URL in `src/fetch.ts` if using a different worker URL.
+
+### 4. Configure Allowed Origins
+
+Edit `worker/proxy.js` to add your production domain to `ALLOWED_ORIGINS`:
+
+```javascript
+const ALLOWED_ORIGINS = [
+  'https://your-domain.com',
+  'http://localhost:5173',
+  'http://localhost:4173',
+];
+```
+
+---
+
 ## Proxy Configuration
 
 DocSignals requires a proxy to fetch external URLs (to avoid CORS restrictions).
 
 ### Local Development
 
-The Vite dev server includes a built-in proxy at `/proxy`. No additional setup required.
+The Vite dev server includes a built-in proxy at `/proxy` with:
+- Rate limiting (10 requests/minute)
+- SSRF protection (blocks private/local IPs)
+
+No additional setup required for local development.
 
 ### Production Deployment
 
-For production, you need to provide your own proxy solution. Options include:
+For production, deploy the Cloudflare Worker in `worker/proxy.js`.
 
-**Cloudflare Worker (recommended):**
-```javascript
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    const targetUrl = url.searchParams.get('url');
+The worker includes:
+- **API Key Authentication** — Requests must include `X-Proxy-Key` header
+- **CORS Validation** — Only configured origins are allowed
+- **Rate Limiting** — 10 requests per minute per IP
+- **SSRF Protection** — Blocks private IPv4/IPv6 addresses
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        },
-      });
-    }
-
-    if (!targetUrl) {
-      return new Response('Missing url parameter', { status: 400 });
-    }
-
-    try {
-      const response = await fetch(targetUrl, {
-        headers: { 'User-Agent': 'DocSignals/1.0', 'Accept': 'text/html,*/*' },
-      });
-      return new Response(await response.text(), {
-        status: response.status,
-        headers: {
-          'Content-Type': response.headers.get('Content-Type') || 'text/html',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } catch (err) {
-      return new Response('Proxy error: ' + err.message, { status: 502 });
-    }
-  },
-};
-```
-
-**Other options:**
-- PHP proxy on your server
-- Node.js proxy service
-- Any CORS-enabled fetch proxy
-
-Update the proxy endpoint in `src/fetch.ts` to point to your proxy URL.
+See the Setup section above for deployment instructions
 
 ---
 
