@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HeaderBar } from './HeaderBar';
 import { FooterNote } from './FooterNote';
 
@@ -290,11 +291,214 @@ const helpEntries: HelpEntry[] = [
     longDescription:
       '“Opaque” indicates that little meaning is expressed via semantic HTML/ARIA patterns: structure is dominated by generic wrappers, landmarks/headings are missing or inconsistent, and interactive/navigation elements may not have reliable accessible names. In this state, automated systems typically must infer intent from fragile signals (CSS classes, visual layout, text proximity, click handlers), which is error-prone and can break easily when markup or styling changes.',
   },
-];
+  // Accessibility
+  {
+    term: 'ARIA Labels',
+    category: 'Accessibility',
+    shortDescription: 'Accessible names for interactive elements',
+    longDescription:
+      'ARIA labels (aria-label, aria-labelledby) provide accessible names for elements that lack visible text or have ambiguous labels. Screen readers and other assistive technologies use these to announce what an element does. Missing or generic ARIA labels (e.g., "button", "link") make it difficult for users and automated tools to understand the purpose of interactive elements.',
+    example: '<button aria-label="Close dialog">×</button>',
+    goodValue: 'All interactive elements have meaningful labels',
+    badValue: 'Generic or missing labels on buttons/links',
+  },
+  {
+    term: 'Focus Order',
+    category: 'Accessibility',
+    shortDescription: 'Logical keyboard navigation sequence',
+    longDescription:
+      'Focus order determines the sequence in which focusable elements receive keyboard focus when users press Tab. A logical focus order follows the visual reading order and allows keyboard-only users to navigate efficiently. Disrupted focus order (e.g., from CSS reordering, incorrect tabindex values) creates confusion and accessibility barriers.',
+    goodValue: 'Focus follows visual/reading order',
+    badValue: 'Focus jumps unexpectedly or skips elements',
+  },
+  {
+    term: 'Skip Links',
+    category: 'Accessibility',
+    shortDescription: 'Shortcuts to bypass repetitive content',
+    longDescription:
+      'Skip links allow keyboard users to jump directly to main content, bypassing navigation menus and other repeated elements. They are typically hidden until focused and are essential for efficient keyboard navigation on content-heavy pages.',
+    example: '<a href="#main-content" class="skip-link">Skip to main content</a>',
+    goodValue: 'Skip link present and functional',
+    badValue: 'No skip link; users must tab through all navigation',
+  },
+  {
+    term: 'Color Contrast',
+    category: 'Accessibility',
+    shortDescription: 'Text readability against background',
+    longDescription:
+      'Color contrast ratio measures the difference in luminance between foreground text and background. WCAG 2.1 requires a minimum ratio of 4.5:1 for normal text and 3:1 for large text. Insufficient contrast makes content difficult to read for users with low vision or color blindness, and can affect automated text extraction accuracy.',
+    goodValue: '4.5:1 or higher for body text',
+    badValue: 'Below 3:1 contrast ratio',
+  },
+
+  // Links
+  {
+    term: 'Link Quality',
+    category: 'Links',
+    shortDescription: 'How descriptive are link texts?',
+    longDescription:
+      'Link quality measures whether anchor text clearly describes the destination or action. Descriptive links ("Read our privacy policy") help users and machines understand context without reading surrounding text. Generic links ("click here", "read more") provide no context and require additional heuristics to determine purpose.',
+    example: '"View product details" vs "Click here"',
+    goodValue: 'Descriptive, context-independent anchor text',
+    badValue: 'Generic text like "click here" or "learn more"',
+  },
+  {
+    term: 'Internal Links',
+    category: 'Links',
+    shortDescription: 'Links pointing to the same domain',
+    longDescription:
+      'Internal links connect pages within the same website and help establish site structure and navigation patterns. A healthy internal link structure aids both users and crawlers in discovering content. Broken internal links or orphaned pages indicate structural issues.',
+    goodValue: 'Well-connected pages with logical hierarchy',
+    badValue: 'Broken links or isolated pages',
+  },
+  {
+    term: 'External Links',
+    category: 'Links',
+    shortDescription: 'Links pointing to other domains',
+    longDescription:
+      'External links reference resources on other websites. They should have clear indication of leaving the site (e.g., icon, text) and appropriate rel attributes (noopener, noreferrer for security). The presence and quality of external links can signal content credibility and context.',
+    example: '<a href="https://example.com" rel="noopener" target="_blank">',
+    goodValue: 'Clearly marked with security attributes',
+    badValue: 'No indication of external navigation',
+  },
+  {
+    term: 'Anchor Fragments',
+    category: 'Links',
+    shortDescription: 'Links to specific page sections',
+    longDescription:
+      'Anchor fragments (#section-id) enable deep linking to specific content sections. They improve navigation for long documents and allow external references to precise locations. Missing or broken fragment targets reduce content addressability.',
+    example: '<a href="#pricing">Jump to pricing</a>',
+    goodValue: 'Fragments link to existing IDs',
+    badValue: 'Broken or missing fragment targets',
+  },
+
+  // Meta
+  {
+    term: 'Meta Tags',
+    category: 'Meta',
+    shortDescription: 'HTML metadata for search and sharing',
+    longDescription:
+      'Meta tags provide structured information about a page including title, description, viewport settings, and character encoding. These are essential for SEO, social sharing, and proper rendering across devices. Missing or duplicate meta tags can affect search visibility and user experience.',
+    example: '<meta name="description" content="Page summary...">',
+    goodValue: 'Complete, unique meta tags per page',
+    badValue: 'Missing or duplicate descriptions',
+  },
+  {
+    term: 'Open Graph',
+    category: 'Meta',
+    shortDescription: 'Social media preview metadata',
+    longDescription:
+      'Open Graph (og:) meta tags control how pages appear when shared on social platforms like Facebook, LinkedIn, and Twitter. They define the title, description, image, and URL shown in previews. Missing OG tags result in unpredictable or unappealing social previews.',
+    example: '<meta property="og:title" content="Article Title">',
+    goodValue: 'Complete OG tags with proper image dimensions',
+    badValue: 'Missing or incomplete social metadata',
+  },
+  {
+    term: 'Structured Data',
+    category: 'Meta',
+    shortDescription: 'Machine-readable content markup (Schema.org)',
+    longDescription:
+      'Structured data uses Schema.org vocabulary (typically JSON-LD) to explicitly describe content types, properties, and relationships. This enables rich search results, knowledge graph integration, and improved content extraction. Valid structured data significantly improves machine interpretability.',
+    example: '<script type="application/ld+json">{"@type": "Article"...}</script>',
+    goodValue: 'Valid JSON-LD with appropriate schema types',
+    badValue: 'No structured data or validation errors',
+  },
+  {
+    term: 'Canonical URL',
+    category: 'Meta',
+    shortDescription: 'Preferred URL for duplicate content',
+    longDescription:
+      'The canonical tag specifies the authoritative URL when content is accessible via multiple URLs (e.g., with/without www, query parameters, pagination). This prevents duplicate content issues in search engines and ensures consistent link attribution.',
+    example: '<link rel="canonical" href="https://example.com/page">',
+    goodValue: 'Canonical points to correct primary URL',
+    badValue: 'Missing or self-referencing incorrectly',
+  },
+
+  // Performance
+  {
+    term: 'Render Blocking',
+    category: 'Performance',
+    shortDescription: 'Resources that delay page rendering',
+    longDescription:
+      'Render-blocking resources (synchronous scripts, CSS in <head>) prevent the browser from displaying content until they load and execute. This affects perceived performance and can delay content availability for both users and automated tools. Minimizing blocking resources improves time-to-first-content.',
+    example: '<script src="large.js"></script> in <head> blocks rendering',
+    goodValue: 'Scripts deferred/async, critical CSS inlined',
+    badValue: 'Multiple synchronous scripts blocking render',
+  },
+  {
+    term: 'Lazy Loading',
+    category: 'Performance',
+    shortDescription: 'Deferred loading of off-screen content',
+    longDescription:
+      'Lazy loading defers loading of images, iframes, and other resources until they approach the viewport. This improves initial load performance but can affect content discovery if not implemented with proper fallbacks. Native lazy loading (loading="lazy") is preferred over JavaScript solutions.',
+    example: '<img src="photo.jpg" loading="lazy" alt="...">',
+    goodValue: 'Native lazy loading with proper dimensions',
+    badValue: 'JavaScript-only lazy loading without fallbacks',
+  },
+  {
+    term: 'Resource Hints',
+    category: 'Performance',
+    shortDescription: 'Preload, prefetch, and preconnect directives',
+    longDescription:
+      'Resource hints (preload, prefetch, preconnect, dns-prefetch) inform browsers about resources needed soon, allowing optimized loading. Proper use improves perceived performance; misuse can waste bandwidth or delay critical resources.',
+    example: '<link rel="preload" href="font.woff2" as="font" crossorigin>',
+    goodValue: 'Strategic hints for critical resources',
+    badValue: 'Over-hinting or missing critical preloads',
+  },
+  {
+    term: 'JavaScript Dependency',
+    category: 'Performance',
+    shortDescription: 'Content requiring JavaScript to render',
+    longDescription:
+      'Pages with high JavaScript dependency may show minimal or no content before scripts execute. This affects crawlers, accessibility tools, and users with slow connections or disabled JavaScript. Server-side rendering or progressive enhancement improves baseline accessibility.',
+    goodValue: 'Core content visible without JavaScript',
+    badValue: 'Blank page or loading spinner without JS',
+  },
+
+  // Quality
+  {
+    term: 'HTML Validity',
+    category: 'Quality',
+    shortDescription: 'Conformance to HTML specification',
+    longDescription:
+      'Valid HTML follows the specification without syntax errors, improper nesting, or deprecated elements. While browsers are forgiving, invalid HTML can cause unpredictable rendering and parsing issues for automated tools. Validation errors often indicate maintenance issues.',
+    goodValue: 'No critical validation errors',
+    badValue: 'Unclosed tags, invalid nesting, deprecated elements',
+  },
+  {
+    term: 'Content-to-Code Ratio',
+    category: 'Quality',
+    shortDescription: 'Proportion of visible text to HTML markup',
+    longDescription:
+      'Content-to-code ratio measures meaningful text content versus total HTML size. A low ratio (heavy markup, little content) can indicate bloated templates, excessive wrappers, or sparse pages. While not a strict quality metric, extreme ratios may signal structural issues.',
+    goodValue: 'Above 10% text content',
+    badValue: 'Below 5% or mostly boilerplate',
+  },
+  {
+    term: 'Duplicate IDs',
+    category: 'Quality',
+    shortDescription: 'Multiple elements with the same ID',
+    longDescription:
+      'HTML IDs must be unique within a document. Duplicate IDs break fragment navigation, form label associations, ARIA references, and JavaScript getElementById. They indicate copy-paste issues or template problems and can cause accessibility and functionality bugs.',
+    example: 'Two elements with id="submit-btn" on same page',
+    goodValue: 'All IDs unique',
+    badValue: 'Duplicate IDs present',
+  },
+  {
+    term: 'Empty Elements',
+    category: 'Quality',
+    shortDescription: 'Elements with no meaningful content',
+    longDescription:
+      'Empty elements (empty headings, links, buttons, paragraphs) provide no value and can confuse users and automated tools. They often result from conditional rendering issues, template placeholders, or removed content without cleanup.',
+    example: '<h2></h2> or <a href="/page"></a>',
+    goodValue: 'No empty interactive or semantic elements',
+    badValue: 'Multiple empty headings, links, or buttons',
+  },];
 
 const categories = [...new Set(helpEntries.map((e) => e.category))];
 
 export function HelpPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
@@ -344,82 +548,93 @@ export function HelpPage() {
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="space-y-8 sm:space-y-10">
           {/* Page title row - same style as Analysis Results / Comparing URLs */}
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Help
-              <span className="ml-2 text-sm font-normal text-gray-500">
-                Glossary & Documentation
-              </span>
-            </h2>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-4">
+            <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
+              <h2 className="text-lg font-semibold text-gray-900 py-1">
+                Help
+              </h2>
+              <div className="flex items-center gap-2 py-2">
+                <span className="hidden text-gray-300 sm:inline">|</span>
+                <span className="text-sm text-gray-500">Glossary & Documentation</span>
+              </div>
+            </div>
+            {/* Search bar + Back button */}
+            <div className="flex items-center justify-center gap-3 w-full sm:w-auto sm:ml-6">
+              <div className="relative w-56 sm:w-64 sm:flex-initial">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search terms..."
+                  className="w-full rounded-lg bg-white px-3 py-2 pl-9 text-sm text-gray-900 ring-1 ring-gray-300 placeholder:text-gray-400 focus:outline-none focus:ring-gray-400"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="inline-flex h-9 items-center gap-1.5 shrink-0 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Back</span>
+              </button>
+            </div>
           </div>
 
-          {/* Search + Category filters */}
-          <div className="space-y-4">
-            {/* Search bar */}
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search terms..."
-                className="w-full rounded-lg bg-white px-3 py-2.5 pl-10 text-sm text-gray-900 shadow-sm ring-1 ring-gray-200/80 placeholder:text-gray-400 focus:outline-none focus:ring-gray-300"
-              />
-              <svg
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {/* Category filters */}
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-gray-400">
+              {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'} found
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-1.5 sm:justify-end">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  selectedCategory === null
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              {search && (
+                All
+              </button>
+              {categories.map((cat) => (
                 <button
-                  onClick={() => setSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-
-            {/* Filters row */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-gray-400">
-                {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'} found
-              </p>
-
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setSelectedCategory(null)}
+                  key={cat}
+                  onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    selectedCategory === null
+                    selectedCategory === cat
                       ? 'bg-indigo-600 text-white'
                       : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  All
+                  {cat}
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      selectedCategory === cat
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 

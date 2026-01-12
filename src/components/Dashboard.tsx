@@ -397,27 +397,45 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
     <div className="space-y-8 sm:space-y-10">
       {/* Header row - same style as Analysis Results */}
       <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-4">
-        <h2 className="text-lg font-semibold text-gray-900 text-center sm:text-left">
-          Comparing {displayEntries.length} URLs
-          {allEntries.length > 4 && (
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              ({allEntries.length - 4} more in history)
+        <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <h2 className="text-lg font-semibold text-gray-900 py-1">
+            Comparing {displayEntries.length} URLs
+          </h2>
+          <div className="flex items-center gap-2 py-2">
+            <span className="hidden text-gray-300 sm:inline">|</span>
+            <span className="text-sm text-gray-500">
+              {differentCount} difference{differentCount !== 1 ? 's' : ''}
             </span>
-          )}
-        </h2>
-        <div className="flex items-center justify-center gap-2">
+            {identicalCount > 0 && (
+              <>
+                <span className="text-gray-300">•</span>
+                <button
+                  onClick={() => setShowIdentical(!showIdentical)}
+                  className={`text-sm transition-colors ${
+                    showIdentical ? 'text-indigo-600' : 'text-gray-400 hover:text-indigo-600'
+                  }`}
+                >
+                  {showIdentical ? 'Hide' : 'Show'} {identicalCount} identical
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Clear History */}
           <button
             onClick={handleClearHistory}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            <span>Clear History</span>
+            <span>Clear</span>
           </button>
+          {/* Back */}
           <button
             onClick={onBack}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
+            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -527,25 +545,6 @@ function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBa
               ))}
             </tbody>
           </table>
-        </div>
-
-        {/* Difference filter - inside the card */}
-        <div className="border-t border-slate-100 px-4 py-3">
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-slate-500">
-              {differentCount} difference{differentCount !== 1 ? 's' : ''}
-            </span>
-            {identicalCount > 0 && (
-              <button
-                onClick={() => setShowIdentical(!showIdentical)}
-                className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
-                  showIdentical ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'
-                }`}
-              >
-                {showIdentical ? 'Hide' : 'Show'} {identicalCount} identical
-              </button>
-            )}
-          </div>
         </div>
       </section>
 

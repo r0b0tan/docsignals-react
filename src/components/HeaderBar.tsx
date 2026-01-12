@@ -170,18 +170,7 @@ export function HeaderBar({
                   )}
                 </div>
               </form>
-            ) : (
-              <button
-                type="button"
-                onClick={handleHelpClick}
-                className="inline-flex h-8 items-center gap-1.5 shrink-0 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back
-              </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
