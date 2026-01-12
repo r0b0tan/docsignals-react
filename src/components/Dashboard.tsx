@@ -208,7 +208,7 @@ function IssueDisplay({ count, allCounts }: { count: number; allCounts: number[]
 }
 
 function areValuesIdentical(values: MetricValue[]): boolean {
-  if (values.length <= 1) return true;
+  if (values.length <= 1) return false; // Show single entries, only compare when 2+
   const first = String(values[0]);
   return values.every(v => String(v) === first);
 }
@@ -423,7 +423,7 @@ function downloadFile(content: string, filename: string, mimeType: string) {
 
 function ComparisonContent({ entries, onBack }: { entries: AnalysisEntry[]; onBack: () => void }) {
   const navigate = useNavigate();
-  const [showIdentical, setShowIdentical] = useState(false);
+  const [showIdentical, setShowIdentical] = useState(true);
   const allEntries = getAnalysisHistory();
   const displayEntries = entries.slice(0, 4);
 
@@ -814,21 +814,24 @@ export function Dashboard({
                       )}
                     </div>
                   )}
-                  {hasHistory && (
-                    <button
-                      onClick={handleCompare}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50"
-                      title="Compare"
-                    >
-                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                      </svg>
-                      <span>Compare</span>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  )}
+                  <button
+                    onClick={handleCompare}
+                    disabled={!hasHistory}
+                    className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium ring-1 ${
+                      hasHistory
+                        ? 'bg-white text-gray-700 ring-gray-300 hover:bg-gray-50'
+                        : 'bg-gray-50 text-gray-400 ring-gray-200 cursor-not-allowed'
+                    }`}
+                    title={hasHistory ? 'Compare analyses' : 'Run at least 2 analyses to compare'}
+                  >
+                    <svg className={`h-4 w-4 ${hasHistory ? 'text-gray-400' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                    <span>Compare</span>
+                    <svg className={`h-4 w-4 ${hasHistory ? 'text-gray-400' : 'text-gray-300'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
