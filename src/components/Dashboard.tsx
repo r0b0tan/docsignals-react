@@ -984,7 +984,7 @@ export function Dashboard({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-                <ExportButton result={state.result} url={url} />
+                <ExportButton result={state.result} url={state.analyzedUrl || url} />
               </div>
 
               <FooterNote />

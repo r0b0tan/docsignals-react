@@ -12,57 +12,148 @@ interface ComparisonViewProps {
 }
 
 function generateComparisonCSV(entries: AnalysisEntry[]): string {
-  const headers = ['Metric', ...entries.map((_, i) => `Analysis ${i + 1}`)];
-
-  const rows = [
-    headers,
-    ['URL', ...entries.map(e => new URL(e.url).hostname)],
-    ['Timestamp', ...entries.map(e => new Date(e.timestamp).toISOString())],
-    ['', ...entries.map(() => '')],
-    ['STRUCTURE', ...entries.map(() => '')],
-    ['Classification', ...entries.map(e => e.result.structure.classification)],
-    ['Difference Count', ...entries.map(e => e.result.structure.differenceCount.toString())],
-    ['DOM Nodes', ...entries.map(e => e.result.structure.domNodes.toString())],
-    ['Max DOM Depth', ...entries.map(e => e.result.structure.maxDepth.toString())],
-    ['Top-level Sections', ...entries.map(e => e.result.structure.topLevelSections.toString())],
-    ['Shadow DOM Hosts', ...entries.map(e => e.result.structure.customElements.toString())],
-    ['', ...entries.map(() => '')],
-    ['SEMANTICS', ...entries.map(() => '')],
-    ['Classification', ...entries.map(e => e.result.semantics.classification)],
-    ['H1 Count', ...entries.map(e => e.result.semantics.headings.h1Count.toString())],
-    ['Has Heading Skips', ...entries.map(e => e.result.semantics.headings.hasSkips ? 'Yes' : 'No')],
-    ['Landmark Coverage %', ...entries.map(e => e.result.semantics.landmarks.coveragePercent.toString())],
-    ['Div/Span Ratio', ...entries.map(e => `${(e.result.semantics.divRatio * 100).toFixed(1)}%`)],
-    ['Link Issues', ...entries.map(e => e.result.semantics.linkIssues.toString())],
-    ['Time Elements (total)', ...entries.map(e => e.result.semantics.timeElements.total.toString())],
-    ['Time Elements (with datetime)', ...entries.map(e => e.result.semantics.timeElements.withDatetime.toString())],
-    ['List Structures', ...entries.map(e => e.result.semantics.lists.total.toString())],
-    ['Tables (total)', ...entries.map(e => e.result.semantics.tables.total.toString())],
-    ['Tables (with headers)', ...entries.map(e => e.result.semantics.tables.withHeaders.toString())],
-    ['Lang Attribute', ...entries.map(e => e.result.semantics.langAttribute ? 'Yes' : 'No')],
-    ['', ...entries.map(() => '')],
-    ['IMAGES', ...entries.map(() => '')],
-    ['Images (total)', ...entries.map(e => (e.result.semantics.images?.total ?? 0).toString())],
-    ['Images with alt', ...entries.map(e => (e.result.semantics.images?.withAlt ?? 0).toString())],
-    ['Images decorative (alt="")', ...entries.map(e => (e.result.semantics.images?.emptyAlt ?? 0).toString())],
-    ['Images missing alt', ...entries.map(e => (e.result.semantics.images?.missingAlt ?? 0).toString())],
-    ['Images in figure', ...entries.map(e => (e.result.semantics.images?.inFigure ?? 0).toString())],
-    ['Images with dimensions', ...entries.map(e => (e.result.semantics.images?.withDimensions ?? 0).toString())],
-    ['Images with srcset', ...entries.map(e => (e.result.semantics.images?.withSrcset ?? 0).toString())],
-    ['Images with lazy loading', ...entries.map(e => (e.result.semantics.images?.withLazyLoading ?? 0).toString())],
+  const headers = [
+    'url',
+    'timestamp',
+    'structure_classification',
+    'structure_difference_count',
+    'structure_dom_nodes',
+    'structure_max_depth',
+    'structure_top_level_sections',
+    'structure_shadow_dom_hosts',
+    'semantics_classification',
+    'semantics_lang_attribute',
+    'semantics_h1_count',
+    'semantics_heading_skips',
+    'semantics_landmarks_found',
+    'semantics_landmarks_coverage_percent',
+    'semantics_images_total',
+    'semantics_images_with_alt',
+    'semantics_images_decorative',
+    'semantics_images_missing_alt',
+    'semantics_images_in_figure',
+    'semantics_images_with_dimensions',
+    'semantics_images_with_srcset',
+    'semantics_images_with_lazy_loading',
+    'semantics_lists_total',
+    'semantics_lists_ordered',
+    'semantics_lists_unordered',
+    'semantics_lists_description',
+    'semantics_tables_total',
+    'semantics_tables_with_headers',
+    'semantics_time_elements_total',
+    'semantics_time_elements_with_datetime',
+    'semantics_div_span_ratio',
+    'semantics_link_issues',
   ];
 
-  return rows.map(row => row.map(cell => `"${cell}"`).join(';')).join('\n');
+  const escapeCSV = (val: unknown): string => {
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const rows = entries.map(e => [
+    e.url,
+    e.timestamp,
+    e.result.structure.classification,
+    e.result.structure.differenceCount,
+    e.result.structure.domNodes,
+    e.result.structure.maxDepth,
+    e.result.structure.topLevelSections,
+    e.result.structure.customElements,
+    e.result.semantics.classification,
+    e.result.semantics.langAttribute,
+    e.result.semantics.headings.h1Count,
+    e.result.semantics.headings.hasSkips,
+    e.result.semantics.landmarks.found.join('|'),
+    e.result.semantics.landmarks.coveragePercent,
+    e.result.semantics.images?.total ?? 0,
+    e.result.semantics.images?.withAlt ?? 0,
+    e.result.semantics.images?.emptyAlt ?? 0,
+    e.result.semantics.images?.missingAlt ?? 0,
+    e.result.semantics.images?.inFigure ?? 0,
+    e.result.semantics.images?.withDimensions ?? 0,
+    e.result.semantics.images?.withSrcset ?? 0,
+    e.result.semantics.images?.withLazyLoading ?? 0,
+    e.result.semantics.lists.total,
+    e.result.semantics.lists.ordered,
+    e.result.semantics.lists.unordered,
+    e.result.semantics.lists.description,
+    e.result.semantics.tables.total,
+    e.result.semantics.tables.withHeaders,
+    e.result.semantics.timeElements.total,
+    e.result.semantics.timeElements.withDatetime,
+    e.result.semantics.divRatio,
+    e.result.semantics.linkIssues,
+  ]);
+
+  return [
+    headers.join(','),
+    ...rows.map(row => row.map(escapeCSV).join(',')),
+  ].join('\n');
 }
 
 function generateComparisonJSON(entries: AnalysisEntry[]): string {
   return JSON.stringify({
-    exportedAt: new Date().toISOString(),
+    meta: {
+      exportedAt: new Date().toISOString(),
+      version: '1.0',
+      count: entries.length,
+    },
     analyses: entries.map(e => ({
-      url: e.url,
-      timestamp: e.timestamp,
-      structure: e.result.structure,
-      semantics: e.result.semantics,
+      meta: {
+        url: e.url,
+        analyzedAt: e.timestamp,
+      },
+      structure: {
+        classification: e.result.structure.classification,
+        differenceCount: e.result.structure.differenceCount,
+        domNodes: e.result.structure.domNodes,
+        maxDepth: e.result.structure.maxDepth,
+        topLevelSections: e.result.structure.topLevelSections,
+        shadowDomHosts: e.result.structure.customElements,
+      },
+      semantics: {
+        classification: e.result.semantics.classification,
+        langAttribute: e.result.semantics.langAttribute,
+        headings: {
+          h1Count: e.result.semantics.headings.h1Count,
+          hasSkips: e.result.semantics.headings.hasSkips,
+        },
+        landmarks: {
+          found: e.result.semantics.landmarks.found,
+          coveragePercent: e.result.semantics.landmarks.coveragePercent,
+        },
+        images: {
+          total: e.result.semantics.images?.total ?? 0,
+          withAlt: e.result.semantics.images?.withAlt ?? 0,
+          decorative: e.result.semantics.images?.emptyAlt ?? 0,
+          missingAlt: e.result.semantics.images?.missingAlt ?? 0,
+          inFigure: e.result.semantics.images?.inFigure ?? 0,
+          withDimensions: e.result.semantics.images?.withDimensions ?? 0,
+          withSrcset: e.result.semantics.images?.withSrcset ?? 0,
+          withLazyLoading: e.result.semantics.images?.withLazyLoading ?? 0,
+        },
+        lists: {
+          total: e.result.semantics.lists.total,
+          ordered: e.result.semantics.lists.ordered,
+          unordered: e.result.semantics.lists.unordered,
+          description: e.result.semantics.lists.description,
+        },
+        tables: {
+          total: e.result.semantics.tables.total,
+          withHeaders: e.result.semantics.tables.withHeaders,
+        },
+        timeElements: {
+          total: e.result.semantics.timeElements.total,
+          withDatetime: e.result.semantics.timeElements.withDatetime,
+        },
+        divSpanRatio: e.result.semantics.divRatio,
+        linkIssues: e.result.semantics.linkIssues,
+      },
     })),
   }, null, 2);
 }
