@@ -82,6 +82,19 @@ function proxyRequest(
         res.end('Invalid redirect URL received from server.');
         return;
       }
+      // Re-validate redirect target to prevent SSRF via open redirect
+      if (!['http:', 'https:'].includes(nextUrl.protocol)) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('Only HTTP(S) allowed');
+        return;
+      }
+      if (BLOCKED_PATTERN.test(nextUrl.hostname)) {
+        res.statusCode = 403;
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('Private addresses not allowed');
+        return;
+      }
       proxyRequest(nextUrl, res, redirectCount + 1);
       return;
     }
@@ -137,9 +150,10 @@ function proxyRequest(
       return;
     }
 
+    console.error(`[Proxy] Unhandled error from ${targetUrl.hostname}:`, err.message);
     res.statusCode = 502;
     res.setHeader('Content-Type', 'text/plain');
-    res.end(`Proxy error: ${err.message}`);
+    res.end('Proxy error — unable to retrieve the requested page.');
   });
 
   proxyReq.end();

@@ -166,7 +166,7 @@ export function ExportButton({ result, url }: ExportButtonProps) {
   function handleExport(format: 'json' | 'csv') {
     let hostname = 'unknown';
     try {
-      hostname = new URL(url).hostname;
+      hostname = new URL(url).hostname.replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 100);
     } catch {
       // Use fallback if URL is invalid
     }

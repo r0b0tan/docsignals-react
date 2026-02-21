@@ -426,7 +426,17 @@ export function saveAnalysis(url: string, result: AnalysisResult) {
 export function getAnalysisHistory(): AnalysisEntry[] {
   try {
     const data = localStorage.getItem('docSignalsAnalyses');
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry): entry is AnalysisEntry =>
+      entry !== null &&
+      typeof entry === 'object' &&
+      typeof entry.url === 'string' &&
+      typeof entry.timestamp === 'string' &&
+      typeof entry.result === 'object' &&
+      entry.result !== null
+    );
   } catch {
     return [];
   }

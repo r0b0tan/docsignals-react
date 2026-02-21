@@ -17,7 +17,10 @@ const EXAMPLE_URLS = [
 function getUrlHistory(): string[] {
   try {
     const history = localStorage.getItem('docSignalsHistory');
-    return history ? JSON.parse(history) : [];
+    if (!history) return [];
+    const parsed = JSON.parse(history);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is string => typeof item === 'string');
   } catch {
     return [];
   }
