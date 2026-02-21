@@ -39,13 +39,6 @@ fi
 
 echo -e "${GREEN}Credentials loaded${NC}"
 
-# Check if expect is installed (only needed if using passphrase)
-if [ -n "$SSH_PASSPHRASE" ] && ! command -v expect &> /dev/null; then
-    echo -e "${RED}Error: 'expect' is not installed!${NC}"
-    echo -e "${YELLOW}Please install it with:${NC}"
-    echo -e "  sudo apt-get install expect"
-    exit 1
-fi
 
 # Configuration
 REMOTE_PATH="/var/www/docsignals"
@@ -79,22 +72,18 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-# Function to run commands with or without expect
+# Function to run commands with SSH key passphrase via SSH_ASKPASS
+# This avoids the passphrase appearing in the process list (as it would with expect -c "...passphrase...")
 run_cmd() {
     if [ -n "$SSH_PASSPHRASE" ]; then
-        expect -c "
-            set timeout 300
-            spawn $@
-            expect {
-                \"Enter passphrase for key\" {
-                    send \"$SSH_PASSPHRASE\r\"
-                    exp_continue
-                }
-                eof
-            }
-            catch wait result
-            exit [lindex \$result 3]
-        "
+        local askpass
+        askpass=$(mktemp /tmp/ssh_askpass.XXXXXX)
+        printf '#!/bin/sh\nprintf "%%s" "$SSH_PASSPHRASE"\n' > "$askpass"
+        chmod 700 "$askpass"
+        SSH_ASKPASS="$askpass" SSH_ASKPASS_REQUIRE=force "$@"
+        local rc=$?
+        rm -f "$askpass"
+        return $rc
     else
         "$@"
     fi

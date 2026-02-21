@@ -45,24 +45,21 @@ if [ ! -d "dist" ]; then
 fi
 echo -e "${GREEN}Build complete${NC}"
 
-# Deploy
+# Deploy using SSH_ASKPASS to avoid passphrase appearing in the process list
 echo -e "${YELLOW}Deploying to ${SSH_HOST}:${REMOTE_PATH}...${NC}"
 
-expect << EOF
-set timeout 300
-spawn rsync -rltvz --delete --no-perms --no-owner --no-group --omit-dir-times dist/ ${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}/
-expect {
-    "Enter passphrase for key" {
-        send "${SSH_PASSPHRASE}\r"
-        exp_continue
-    }
-    eof
-}
-catch wait result
-exit [lindex \$result 3]
-EOF
+ASKPASS=$(mktemp /tmp/ssh_askpass.XXXXXX)
+printf '#!/bin/sh\nprintf "%%s" "$SSH_PASSPHRASE"\n' > "$ASKPASS"
+chmod 700 "$ASKPASS"
 
-if [ $? -ne 0 ]; then
+SSH_ASKPASS="$ASKPASS" SSH_ASKPASS_REQUIRE=force \
+    rsync -rltvz --delete --no-perms --no-owner --no-group --omit-dir-times \
+    dist/ "${SSH_USER}@${SSH_HOST}:${REMOTE_PATH}/"
+RC=$?
+
+rm -f "$ASKPASS"
+
+if [ $RC -ne 0 ]; then
     echo -e "${RED}Deployment failed!${NC}"
     exit 1
 fi
